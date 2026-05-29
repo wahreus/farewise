@@ -1,0 +1,273 @@
+Station,Line(s),Zone(s)
+Acton Town,District|Piccadilly,3
+Aldgate,Circle|Metropolitan,1
+Aldgate East,District|Hammersmith & City,1
+Alperton,Piccadilly,4
+Amersham,Metropolitan,9
+Angel,Northern,1
+Archway,Northern,2|3
+Arnos Grove,Piccadilly,4
+Arsenal,Piccadilly,2
+Baker Street,Bakerloo|Circle|Hammersmith & City|Jubilee|Metropolitan,1
+Balham,Northern,3
+Bank,Central|Northern|Waterloo & City,1
+Barbican,Circle|Hammersmith & City|Metropolitan,1
+Barking,District|Hammersmith & City,4
+Barkingside,Central,4
+Barons Court,District|Piccadilly,2
+Battersea Power Station,Northern,1
+Bayswater,Circle|District,1
+Becontree,District,5
+Belsize Park,Northern,2
+Bermondsey,Jubilee,2
+Bethnal Green,Central,2
+Blackfriars,Circle|District,1
+Blackhorse Road,Victoria,3
+Bond Street,Central|Jubilee,1
+Borough,Northern,1
+Boston Manor,Piccadilly,4
+Bounds Green,Piccadilly,3|4
+Bow Road,District|Hammersmith & City,2
+Brent Cross,Northern,3
+Brixton,Victoria,2
+Bromley-by-Bow,District|Hammersmith & City,2|3
+Buckhurst Hill,Central,5
+Burnt Oak,Northern,4
+Caledonian Road,Piccadilly,2
+Camden Town,Northern,2
+Canada Water,Jubilee,2
+Canary Wharf,Jubilee,2
+Canning Town,Jubilee,2|3
+Cannon Street,Circle|District,1
+Canons Park,Jubilee,5
+Chalfont & Latimer,Metropolitan,8
+Chalk Farm,Northern,2
+Chancery Lane,Central,1
+Charing Cross,Bakerloo|Northern,1
+Chesham,Metropolitan,9
+Chigwell,Central,4
+Chiswick Park,District,3
+Chorleywood,Metropolitan,7
+Clapham Common,Northern,2
+Clapham North,Northern,2
+Clapham South,Northern,2|3
+Cockfosters,Piccadilly,5
+Colindale,Northern,4
+Colliers Wood,Northern,3
+Covent Garden,Piccadilly,1
+Croxley,Metropolitan,7
+Dagenham East,District,5
+Dagenham Heathway,District,5
+Debden,Central,6
+Dollis Hill,Jubilee,3
+Ealing Broadway,Central|District,3
+Ealing Common,District|Piccadilly,3
+Earl's Court,District|Piccadilly,1|2
+East Acton,Central,2
+East Finchley,Northern,3
+East Ham,District|Hammersmith & City,3|4
+East Putney,District,2|3
+Eastcote,Metropolitan|Piccadilly,5
+Edgware,Northern,5
+Edgware Road (Bakerloo),Bakerloo,1
+Edgware Road (Circle/District/Hammersmith & City),Circle|District|Hammersmith & City,1
+Elephant & Castle,Bakerloo|Northern,1|2
+Elm Park,District,6
+Embankment,Bakerloo|Circle|District|Northern,1
+Epping,Central,6
+Euston,Northern|Victoria,1
+Euston Square,Circle|Hammersmith & City|Metropolitan,1
+Fairlop,Central,4
+Farringdon,Circle|Hammersmith & City|Metropolitan,1
+Finchley Central,Northern,4
+Finchley Road,Jubilee|Metropolitan,2
+Finsbury Park,Piccadilly|Victoria,2
+Fulham Broadway,District,2
+Gants Hill,Central,4
+Gloucester Road,Circle|District|Piccadilly,1
+Golders Green,Northern,3
+Goldhawk Road,Circle|Hammersmith & City,2
+Goodge Street,Northern,1
+Grange Hill,Central,4
+Great Portland Street,Circle|Hammersmith & City|Metropolitan,1
+Green Park,Jubilee|Piccadilly|Victoria,1
+Greenford,Central,4
+Gunnersbury,District,3
+Hainault,Central,4
+Hammersmith (Circle/Hammersmith & City),Circle|Hammersmith & City,2
+Hammersmith (District/Piccadilly),District|Piccadilly,2
+Hampstead,Northern,2
+Hanger Lane,Central,3
+Harlesden,Bakerloo,3
+Harrow & Wealdstone,Bakerloo,5
+Harrow-on-the-Hill,Metropolitan,5
+Hatton Cross,Piccadilly,5|6
+Heathrow Terminal 4,Piccadilly,6
+Heathrow Terminal 5,Piccadilly,6
+Heathrow Terminals 2 & 3,Piccadilly,6
+Hendon Central,Northern,3|4
+High Barnet,Northern,5
+High Street Kensington,Circle|District,1
+Highbury and Islington,Victoria,2
+Highgate,Northern,3
+Hillingdon,Metropolitan|Piccadilly,6
+Holborn,Central|Piccadilly,1
+Holland Park,Central,2
+Holloway Road,Piccadilly,2
+Hornchurch,District,6
+Hounslow Central,Piccadilly,4
+Hounslow East,Piccadilly,4
+Hounslow West,Piccadilly,5
+Hyde Park Corner,Piccadilly,1
+Ickenham,Metropolitan|Piccadilly,6
+Kennington,Northern,1|2
+Kensal Green,Bakerloo,2
+Kensington (Olympia),District,2
+Kentish Town,Northern,2
+Kenton,Bakerloo,4
+Kew Gardens,District,3|4
+Kilburn,Jubilee,2
+Kilburn Park,Bakerloo,2
+King's Cross St Pancras,Circle|Hammersmith & City|Metropolitan|Northern|Piccadilly|Victoria,1
+Kingsbury,Jubilee,4
+Knightsbridge,Piccadilly,1
+Ladbroke Grove,Circle|Hammersmith & City,2
+Lambeth North,Bakerloo,1
+Lancaster Gate,Central,1
+Latimer Road,Circle|Hammersmith & City,2
+Leicester Square,Northern|Piccadilly,1
+Leyton,Central,3
+Leytonstone,Central,3|4
+Liverpool Street,Central|Circle|Hammersmith & City|Metropolitan,1
+London Bridge,Jubilee|Northern,1
+Loughton,Central,6
+Maida Vale,Bakerloo,2
+Manor House,Piccadilly,2|3
+Mansion House,Circle|District,1
+Marble Arch,Central,1
+Marylebone,Bakerloo,1
+Mile End,Central|Hammersmith & City,2
+Mill Hill East,Northern,4
+Monument,Circle|District,1
+Moor Park,Metropolitan,6|7
+Moorgate,Circle|Hammersmith & City|Metropolitan|Northern,1
+Morden,Northern,4
+Mornington Crescent,Northern,2
+Neasden,Jubilee,3
+Newbury Park,Central,4
+Nine Elms,Northern,1
+North Acton,Central,2|3
+North Ealing,Piccadilly,3
+North Greenwich,Jubilee,2|3
+North Harrow,Metropolitan,5
+North Wembley,Bakerloo,4
+Northfields,Piccadilly,3
+Northolt,Central,5
+Northwick Park,Metropolitan,4
+Northwood,Metropolitan,6
+Northwood Hills,Metropolitan,6
+Notting Hill Gate,Central|Circle|District,1|2
+Oakwood,Piccadilly,5
+Old Street,Northern,1
+Osterley,Piccadilly,4
+Oval,Northern,2
+Oxford Circus,Bakerloo|Central|Victoria,1
+Paddington (Bakerloo/Circle/District),Bakerloo|Circle|District,1
+Paddington (Circle/Hammersmith & City),Circle|Hammersmith & City,1
+Park Royal,Piccadilly,3
+Parsons Green,District,2
+Perivale,Central,4
+Piccadilly Circus,Bakerloo|Piccadilly,1
+Pimlico,Victoria,1
+Pinner,Metropolitan,5
+Plaistow,District|Hammersmith & City,3
+Preston Road,Metropolitan,4
+Putney Bridge,District,2
+Queen's Park,Bakerloo,2
+Queensbury,Jubilee,4
+Queensway,Central,1
+Ravenscourt Park,District,2
+Rayners Lane,Piccadilly,5
+Redbridge,Central,4
+Regent's Park,Bakerloo,1
+Richmond,District,4
+Rickmansworth,Metropolitan,7
+Roding Valley,Central,4
+Royal Oak,Circle|Hammersmith & City,2
+Ruislip,Metropolitan|Piccadilly,6
+Ruislip Gardens,Central,5
+Ruislip Manor,Metropolitan|Piccadilly,6
+Russell Square,Piccadilly,1
+Seven Sisters,Victoria,3
+Shepherd's Bush,Central,2
+Shepherd's Bush Market,Circle|Hammersmith & City,2
+Sloane Square,Circle|District,1
+Snaresbrook,Central,4
+South Ealing,Piccadilly,3
+South Harrow,Piccadilly,5
+South Kensington,Circle|District|Piccadilly,1
+South Kenton,Bakerloo,4
+South Ruislip,Central,5
+South Wimbledon,Northern,3|4
+South Woodford,Central,4
+Southfields,District,3
+Southgate,Piccadilly,4
+Southwark,Jubilee,1
+St James's Park,Circle|District,1
+St John's Wood,Jubilee,2
+St Paul's,Central,1
+Stamford Brook,District,2
+Stanmore,Jubilee,5
+Stepney Green,District|Hammersmith & City,2
+Stockwell,Northern|Victoria,2
+Stonebridge Park,Bakerloo,3
+Stratford,Central|Jubilee,3
+Sudbury Hill,Piccadilly,4
+Sudbury Town,Piccadilly,4
+Swiss Cottage,Jubilee,2
+Temple,Circle|District,1
+Theydon Bois,Central,6
+Tooting Bec,Northern,3
+Tooting Broadway,Northern,3
+Tottenham Court Road,Central|Northern,1
+Tottenham Hale,Victoria,3
+Totteridge & Whetstone,Northern,4
+Tower Hill,Circle|District,1
+Tufnell Park,Northern,2
+Turnham Green,District|Piccadilly,2|3
+Turnpike Lane,Piccadilly,3
+Upminster,District,6
+Upminster Bridge,District,6
+Upney,District,4
+Upton Park,District|Hammersmith & City,3
+Uxbridge,Metropolitan|Piccadilly,6
+Vauxhall,Victoria,1|2
+Victoria,Circle|District|Victoria,1
+Walthamstow Central,Victoria,3
+Wanstead,Central,4
+Warren Street,Northern|Victoria,1
+Warwick Avenue,Bakerloo,2
+Waterloo,Bakerloo|Jubilee|Northern|Waterloo & City,1
+Watford,Metropolitan,7
+Wembley Central,Bakerloo,4
+Wembley Park,Jubilee|Metropolitan,4
+West Acton,Central,3
+West Brompton,District,2
+West Finchley,Northern,4
+West Ham,District|Hammersmith & City|Jubilee,3
+West Hampstead,Jubilee,2
+West Harrow,Metropolitan,5
+West Kensington,District,2
+West Ruislip,Central,6
+Westbourne Park,Circle|Hammersmith & City,2
+Westminster,Circle|District|Jubilee,1
+White City,Central,2
+Whitechapel,District|Hammersmith & City,2
+Willesden Green,Jubilee,2|3
+Willesden Junction,Bakerloo,3
+Wimbledon,District,3
+Wimbledon Park,District,3
+Wood Green,Piccadilly,3
+Wood Lane,Circle|Hammersmith & City,2
+Woodford,Central,4
+Woodside Park,Northern,4
