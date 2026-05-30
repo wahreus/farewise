@@ -1,0 +1,36 @@
+{
+  "valid_from": "2026-03-01",
+  "currency": "GBP",
+  "underground": {
+    "zone_1": {
+      "daily_cap": "8.90",
+      "weekly_cap": "44.70",
+      "monthly_travelcard": "171.70"
+    },
+    "zones_1_2": {
+      "daily_cap": "8.90",
+      "weekly_cap": "44.70",
+      "monthly_travelcard": "171.70"
+    },
+    "zones_1_3": {
+      "daily_cap": "10.50",
+      "weekly_cap": "52.50",
+      "monthly_travelcard": "201.60"
+    },
+    "zones_1_4": {
+      "daily_cap": "12.80",
+      "weekly_cap": "64.20",
+      "monthly_travelcard": "246.60"
+    },
+    "zones_1_5": {
+      "daily_cap": "15.30",
+      "weekly_cap": "76.40",
+      "monthly_travelcard": "293.40"
+    },
+    "zones_1_6": {
+      "daily_cap": "16.30",
+      "weekly_cap": "81.60",
+      "monthly_travelcard": "313.40"
+    }
+  }
+}
