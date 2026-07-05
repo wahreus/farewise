@@ -3,8 +3,10 @@ from dataclasses import dataclass
 from pathlib import Path
 
 
-DATA_DIR = Path(__file__).parent / "data"
-STATIONS_CSV = DATA_DIR / "london_underground_stations.csv"
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+DATA_DIR = PROJECT_ROOT / "data"
+FARES_JSON = DATA_DIR / "reference" / "fares_2026.json"
+STATIONS_CSV = DATA_DIR / "reference" / "london_underground_stations.csv"
 
 
 @dataclass

@@ -4,8 +4,10 @@ from decimal import Decimal
 from pathlib import Path
 
 
-DATA_DIR = Path(__file__).parent / "data"
-FARES_JSON = DATA_DIR / "fares_2026.json"
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+DATA_DIR = PROJECT_ROOT / "data"
+FARES_JSON = DATA_DIR / "reference" / "fares_2026.json"
+STATIONS_CSV = DATA_DIR / "reference" / "london_underground_stations.csv"
 
 
 @dataclass(frozen=True)

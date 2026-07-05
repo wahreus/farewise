@@ -1,1 +1,5 @@
-.DS_store
+.DS_Store
+
+# Local journey history exports
+data/raw/*.csv
+data/processed/*.csv
