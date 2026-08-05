@@ -2,19 +2,16 @@ import csv
 from dataclasses import dataclass
 from pathlib import Path
 
-
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 DATA_DIR = PROJECT_ROOT / "data"
 FARES_JSON = DATA_DIR / "reference" / "fares_2026.json"
 STATIONS_CSV = DATA_DIR / "reference" / "london_underground_stations.csv"
-
 
 @dataclass
 class Station:
     name: str
     lines: list[str]
     zones: list[str]
-
 
 def load_station_data(csv_path: str | Path) -> dict[str, Station]:
     stations = {}
@@ -24,18 +21,15 @@ def load_station_data(csv_path: str | Path) -> dict[str, Station]:
             station = Station(
                 name=row["Station"].strip(),
                 lines=[line.strip() for line in row["Line(s)"].split("|")],
-                zones=[zone.strip() for zone in row["Zone(s)"].split("|")]
-            )
+                zones=[zone.strip() for zone in row["Zone(s)"].split("|")])
             stations[station.name.lower()] = station
     return stations
-
 
 def main():
     stations = load_station_data(STATIONS_CSV)
     print(f"Loaded {len(stations)} stations")
     station = stations["earl's court"]
     print("Example:", station)
-
 
 if __name__ == "__main__":
     main()

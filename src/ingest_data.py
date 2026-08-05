@@ -2,25 +2,19 @@ from pathlib import Path
 import csv
 import re
 
-
-FIELDNAMES = [
-             "date",
-             "start_time",
-             "end_time",
-             "start_station",
-             "end_station",
-             "start_network",
-             "end_network",
-             "charged_amount",
-             ]
+FIELDNAMES = ["date",
+              "start_time",
+              "end_time",
+              "start_station",
+              "end_station",
+              "start_network",
+              "end_network",
+              "charged_amount"]
 
 
-NETWORK_FILES = {
-                "underground": "london_underground_stations.csv",
-                "dlr": "london_dlr_stations.csv",
-                "overground": "london_overground_stations.csv",
-                }
-
+NETWORK_FILES = {"underground": "london_underground_stations.csv",
+                 "dlr": "london_dlr_stations.csv",
+                 "overground": "london_overground_stations.csv"}
 
 def find_repo_root() -> Path:
     start = Path(__file__).resolve().parent
@@ -29,19 +23,14 @@ def find_repo_root() -> Path:
         has_refs = (folder / "data" / "reference").exists()
         if has_raw and has_refs:
             return folder
-    raise FileNotFoundError(
-                           "Could not find data/raw/journey_history.csv and data/reference/. "
-                           "Put this script in farewise/src/ and run it from inside the repo."
-                           )
-
+    raise FileNotFoundError("Could not find data/raw/journey_history.csv and data/reference/. "
+                            "Put this script in farewise/src/ and run it from inside the repo.")
 
 def clean_text(value: object) -> str:
     return " ".join(str(value or "").strip().split())
 
-
 def key(value: object) -> str:
     return clean_text(value).casefold()
-
 
 def read_station_names(path: Path) -> dict[str, str]:
     stations: dict[str, str] = {}
@@ -53,20 +42,15 @@ def read_station_names(path: Path) -> dict[str, str]:
                 stations[key(station)] = station
     return stations
 
-
 def read_reference_data(reference_dir: Path) -> dict[str, dict[str, str]]:
-    return {
-           network: read_station_names(reference_dir / filename)
-           for network, filename in NETWORK_FILES.items()
-           }
-
+    return {network: read_station_names(reference_dir / filename)
+            for network, filename in NETWORK_FILES.items()}
 
 def split_action(action: str) -> tuple[str, str] | None:
     parts = re.split(r"\s+to\s+", clean_text(action), maxsplit=1, flags=re.IGNORECASE)
     if len(parts) != 2:
         return None
     return parts[0], parts[1]
-
 
 def remove_marker(endpoint: str) -> tuple[str, str] | None:
     """
@@ -97,11 +81,9 @@ def remove_marker(endpoint: str) -> tuple[str, str] | None:
         return text[:-4].strip(), "dlr"
     return text, "underground"
 
-
-def parse_endpoint(
-                  endpoint: str,
-                  stations: dict[str, dict[str, str]],
-                  ) -> tuple[str, str] | None:
+def parse_endpoint(endpoint: str,
+                   stations: dict[str, dict[str, str]],
+                   ) -> tuple[str, str] | None:
     parsed = remove_marker(endpoint)
     if parsed is None:
         return None
@@ -113,7 +95,6 @@ def parse_endpoint(
         return None
     return official_name, network
 
-
 def clean_charge(value: object) -> str | None:
     text = clean_text(value).replace("£", "").replace(",", "")
     if not text:
@@ -123,11 +104,9 @@ def clean_charge(value: object) -> str | None:
     except ValueError:
         return None
 
-
-def clean_row(
-             row: dict[str, str],
-             stations: dict[str, dict[str, str]],
-             ) -> dict[str, str] | None:
+def clean_row(row: dict[str, str],
+              stations: dict[str, dict[str, str]],
+              ) -> dict[str, str] | None:
     action = split_action(row.get("Journey/Action", ""))
     if action is None:
         return None
@@ -138,17 +117,14 @@ def clean_row(
         return None
     start_station, start_network = start
     end_station, end_network = end
-    return {
-           "date": clean_text(row.get("Date", "")),
-           "start_time": clean_text(row.get("Start Time", "")),
-           "end_time": clean_text(row.get("End Time", "")),
-           "start_station": start_station,
-           "end_station": end_station,
-           "start_network": start_network,
-           "end_network": end_network,
-           "charged_amount": charge,
-           }
-
+    return {"date": clean_text(row.get("Date", "")),
+            "start_time": clean_text(row.get("Start Time", "")),
+            "end_time": clean_text(row.get("End Time", "")),
+            "start_station": start_station,
+            "end_station": end_station,
+            "start_network": start_network,
+            "end_network": end_network,
+            "charged_amount": charge}
 
 def main() -> None:
     root = find_repo_root()
@@ -168,7 +144,6 @@ def main() -> None:
         writer = csv.DictWriter(file, fieldnames=FIELDNAMES)
         writer.writeheader()
         writer.writerows(cleaned_rows)
-
 
 if __name__ == "__main__":
     main()
