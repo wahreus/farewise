@@ -1,5 +1,10 @@
 .DS_Store
 
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
 # Local journey history exports
 data/raw/*.csv
 data/processed/*.csv
