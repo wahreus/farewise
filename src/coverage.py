@@ -1,8 +1,7 @@
 import re
 from pathlib import Path
-from src.ingest_data import NETWORK_FILES
 from src.journeys import Journey
-from src.stations import Station, load_station_data
+from src.stations import NETWORK_FILES, Station, load_station_data
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 REFERENCE_DIR = PROJECT_ROOT / "data" / "reference"

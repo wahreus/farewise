@@ -1,22 +1,15 @@
 import csv
+import re
 from dataclasses import dataclass
 from datetime import date, datetime, time
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
-from src.ingest_data import clean_row, read_reference_data
+from src.stations import NETWORK_FILES
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 REFERENCE_DIR = PROJECT_ROOT / "data" / "reference"
 DATE_FORMATS = ("%d-%b-%Y", "%Y-%m-%d", "%d/%m/%Y", "%d-%m-%Y")
 TIME_FORMATS = ("%H:%M", "%H:%M:%S")
-PROCESSED_FIELDS = {"date",
-                    "start_time",
-                    "end_time",
-                    "start_station",
-                    "end_station",
-                    "start_network",
-                    "end_network",
-                    "charged_amount"}
 RAW_FIELDS = {"Date", "Start Time", "End Time", "Journey/Action", "Charge"}
 
 class JourneyParseError(ValueError):
@@ -35,6 +28,98 @@ class Journey:
     @property
     def starts_at(self) -> datetime:
         return datetime.combine(self.date, self.start_time)
+
+def clean_text(value: object) -> str:
+    return " ".join(str(value or "").strip().split())
+
+def key(value: object) -> str:
+    return clean_text(value).casefold()
+
+def read_station_names(path: Path) -> dict[str, str]:
+    stations: dict[str, str] = {}
+    with path.open(newline="", encoding="utf-8-sig") as file:
+        reader = csv.DictReader(file)
+        for row in reader:
+            station = clean_text(row.get("Station", ""))
+            if station:
+                stations[key(station)] = station
+    return stations
+
+def read_reference_data(reference_dir: Path) -> dict[str, dict[str, str]]:
+    return {network: read_station_names(reference_dir / filename)
+            for network, filename in NETWORK_FILES.items()}
+
+def split_action(action: str) -> tuple[str, str] | None:
+    parts = re.split(r"\s+to\s+", clean_text(action), maxsplit=1,
+                     flags=re.IGNORECASE)
+    if len(parts) != 2:
+        return None
+    return parts[0], parts[1]
+
+def remove_marker(endpoint: str) -> tuple[str, str] | None:
+    text = clean_text(endpoint)
+    lower = text.casefold()
+    if lower in {"[no touch-out]", "[no touch-in]"}:
+        return text, "unknown"
+    bracket_match = re.search(r"\s+\[([^\]]+)\]$", text)
+    if bracket_match:
+        label = bracket_match.group(1).casefold()
+        station = text[: bracket_match.start()].strip()
+        if label == "london underground":
+            return station, "underground"
+        if label == "london overground":
+            return station, "overground"
+        if label == "dlr":
+            return station, "dlr"
+        return None
+    if lower.endswith(" dlr"):
+        return text[:-4].strip(), "dlr"
+    return text, "underground"
+
+def parse_endpoint(endpoint: str,
+                   stations: dict[str, dict[str, str]],
+                   ) -> tuple[str, str] | None:
+    parsed = remove_marker(endpoint)
+    if parsed is None:
+        return None
+    station, network = parsed
+    if network == "unknown":
+        return station, network
+    official_name = stations[network].get(key(station))
+    if official_name is None:
+        return None
+    return official_name, network
+
+def clean_charge(value: object) -> str | None:
+    text = clean_text(value).replace("£", "").replace(",", "")
+    if not text:
+        return None
+    try:
+        return str(float(text))
+    except ValueError:
+        return None
+
+def clean_row(row: dict[str, str],
+              stations: dict[str, dict[str, str]],
+              ) -> dict[str, str] | None:
+    action = split_action(row.get("Journey/Action", ""))
+    if action is None:
+        return None
+    start = parse_endpoint(action[0], stations)
+    end = parse_endpoint(action[1], stations)
+    charge = clean_charge(row.get("Charge", ""))
+    if start is None or end is None or charge is None:
+        return None
+    start_station, start_network = start
+    end_station, end_network = end
+    return {"date": clean_text(row.get("Date", "")),
+            "start_time": clean_text(row.get("Start Time", "")),
+            "end_time": clean_text(row.get("End Time", "")),
+            "start_station": start_station,
+            "end_station": end_station,
+            "start_network": start_network,
+            "end_network": end_network,
+            "charged_amount": charge}
 
 def parse_date(value: str) -> date:
     text = value.strip()
@@ -89,11 +174,7 @@ def journey_from_row(row: dict[str, str],
             charged_amount=parse_amount(row["charged_amount"]))
     except (KeyError, JourneyParseError) as error:
         location = f" at CSV row {row_number}" if row_number is not None else ""
-        raise JourneyParseError(f"Invalid processed journey{location}: {error}") from error
-
-def load_processed_journeys(reader: csv.DictReader) -> list[Journey]:
-    return [journey_from_row(row, row_number)
-            for row_number, row in enumerate(reader, start=2)]
+        raise JourneyParseError(f"Invalid journey{location}: {error}") from error
 
 def load_raw_journeys(reader: csv.DictReader,
                       reference_dir: str | Path,
@@ -112,13 +193,9 @@ def load_journeys(csv_path: str | Path,
     with Path(csv_path).open(newline="", encoding="utf-8-sig") as file:
         reader = csv.DictReader(file)
         fields = set(reader.fieldnames or [])
-        if PROCESSED_FIELDS.issubset(fields):
-            journeys = load_processed_journeys(reader)
-        elif RAW_FIELDS.issubset(fields):
-            journeys = load_raw_journeys(reader, reference_dir)
-        else:
-            raise JourneyParseError(
-                "CSV does not match the raw TfL or processed FareWise format")
+        if not RAW_FIELDS.issubset(fields):
+            raise JourneyParseError("CSV does not match the raw TfL format")
+        journeys = load_raw_journeys(reader, reference_dir)
     if not journeys:
         raise JourneyParseError("No supported journeys were found in the CSV")
     return sorted(journeys, key=lambda journey: journey.starts_at)

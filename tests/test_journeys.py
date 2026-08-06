@@ -3,10 +3,13 @@ from datetime import date, datetime, time
 from decimal import Decimal
 from io import StringIO
 from pathlib import Path
+
 import pytest
+
 from src import journeys
 
-def processed_row(**overrides: str) -> dict[str, str]:
+
+def normalized_row(**overrides: str) -> dict[str, str]:
     row = {"date": "01/03/2026",
            "start_time": "08:10",
            "end_time": "08:25",
@@ -17,6 +20,17 @@ def processed_row(**overrides: str) -> dict[str, str]:
            "charged_amount": "£2.80"}
     row.update(overrides)
     return row
+
+
+def sample_stations() -> dict[str, dict[str, str]]:
+    return {"underground": {
+                "oxford circus": "Oxford Circus",
+                "bank": "Bank"},
+            "dlr": {
+                "limehouse": "Limehouse"},
+            "overground": {
+                "surrey quays": "Surrey Quays"}}
+
 
 def write_reference_files(reference_dir: Path) -> None:
     reference_dir.mkdir(parents=True, exist_ok=True)
@@ -32,6 +46,7 @@ def write_reference_files(reference_dir: Path) -> None:
                       for station_name in station_names),
             encoding="utf-8")
 
+
 def write_csv(path: Path,
               fieldnames: list[str],
               rows: list[dict[str, str]],
@@ -40,6 +55,20 @@ def write_csv(path: Path,
         writer = csv.DictWriter(file, fieldnames=fieldnames)
         writer.writeheader()
         writer.writerows(rows)
+
+
+def raw_row(date_value: str = "01/03/2026",
+            start_time: str = "08:10",
+            end_time: str = "08:25",
+            action: str = "Oxford Circus to Limehouse DLR",
+            charge: str = "£2.80",
+            ) -> dict[str, str]:
+    return {"Date": date_value,
+            "Start Time": start_time,
+            "End Time": end_time,
+            "Journey/Action": action,
+            "Charge": charge}
+
 
 def test_journey_starts_at_combines_date_and_start_time() -> None:
     journey = journeys.Journey(
@@ -53,6 +82,110 @@ def test_journey_starts_at_combines_date_and_start_time() -> None:
         charged_amount=Decimal("2.80"))
     assert journey.starts_at == datetime(2026, 3, 1, 8, 10)
 
+
+def test_clean_text_normalizes_whitespace_and_none() -> None:
+    assert journeys.clean_text("  Oxford   Circus \n") == "Oxford Circus"
+    assert journeys.clean_text(None) == ""
+
+
+def test_key_normalizes_whitespace_and_case() -> None:
+    assert journeys.key("  OXFORD   Circus ") == "oxford circus"
+
+
+def test_read_station_names_uses_normalized_keys(tmp_path: Path) -> None:
+    station_path = tmp_path / "stations.csv"
+    station_path.write_text("Station,Line(s),Zone(s)\n"
+                            "Oxford Circus,Central | Victoria,1\n"
+                            "  Earl's   Court  ,District | Piccadilly,1 | 2\n",
+                            encoding="utf-8-sig")
+    stations = journeys.read_station_names(station_path)
+    assert stations == {"oxford circus": "Oxford Circus",
+                        "earl's court": "Earl's Court"}
+
+
+def test_read_reference_data_loads_all_network_files(tmp_path: Path) -> None:
+    write_reference_files(tmp_path)
+    stations = journeys.read_reference_data(tmp_path)
+    assert stations == sample_stations()
+
+
+def test_split_action_is_case_insensitive() -> None:
+    assert journeys.split_action("Oxford Circus TO Bank") == (
+        "Oxford Circus",
+        "Bank")
+
+
+def test_split_action_rejects_invalid_action() -> None:
+    assert journeys.split_action("Oxford Circus") is None
+
+
+@pytest.mark.parametrize(
+    ("endpoint", "expected"),
+    [("Oxford Circus", ("Oxford Circus", "underground")),
+     ("Limehouse DLR", ("Limehouse", "dlr")),
+     ("Surrey Quays [London Overground]", ("Surrey Quays", "overground")),
+     ("Oxford Circus [London Underground]",
+      ("Oxford Circus", "underground")),
+     ("Limehouse [DLR]", ("Limehouse", "dlr")),
+     ("[No touch-out]", ("[No touch-out]", "unknown")),
+     ("[No touch-in]", ("[No touch-in]", "unknown")),
+     ("Station [Unsupported Network]", None)])
+def test_remove_marker(endpoint: str,
+                       expected: tuple[str, str] | None,
+                       ) -> None:
+    assert journeys.remove_marker(endpoint) == expected
+
+
+def test_parse_endpoint_returns_official_station_name() -> None:
+    assert journeys.parse_endpoint(
+        "  OXFORD circus ",
+        sample_stations(),
+    ) == ("Oxford Circus", "underground")
+
+
+def test_parse_endpoint_handles_incomplete_journey_marker() -> None:
+    assert journeys.parse_endpoint(
+        "[No touch-out]",
+        sample_stations(),
+    ) == ("[No touch-out]", "unknown")
+
+
+def test_parse_endpoint_rejects_unknown_station() -> None:
+    assert journeys.parse_endpoint(
+        "Unknown Station",
+        sample_stations(),
+    ) is None
+
+
+@pytest.mark.parametrize(
+    ("value", "expected"),
+    [("£2.80", "2.8"),
+     ("1,234.50", "1234.5"),
+     (2.5, "2.5"),
+     ("", None),
+     (None, None),
+     ("not a charge", None)])
+def test_clean_charge(value: object, expected: str | None) -> None:
+    assert journeys.clean_charge(value) == expected
+
+
+def test_clean_row_returns_normalized_journey() -> None:
+    cleaned = journeys.clean_row(raw_row(), sample_stations())
+    assert cleaned == {"date": "01/03/2026",
+                       "start_time": "08:10",
+                       "end_time": "08:25",
+                       "start_station": "Oxford Circus",
+                       "end_station": "Limehouse",
+                       "start_network": "underground",
+                       "end_network": "dlr",
+                       "charged_amount": "2.8"}
+
+
+def test_clean_row_rejects_invalid_journey() -> None:
+    row = raw_row(action="Oxford Circus to Unknown Station")
+    assert journeys.clean_row(row, sample_stations()) is None
+
+
 @pytest.mark.parametrize(
     ("value", "expected"),
     [("01-Mar-2026", date(2026, 3, 1)),
@@ -65,10 +198,12 @@ def test_parse_date_accepts_supported_formats(value: str,
                                               ) -> None:
     assert journeys.parse_date(value) == expected
 
+
 def test_parse_date_rejects_unsupported_format() -> None:
     with pytest.raises(journeys.JourneyParseError,
                        match="Unsupported journey date"):
         journeys.parse_date("March 1, 2026")
+
 
 @pytest.mark.parametrize(
     ("value", "expected"),
@@ -80,17 +215,21 @@ def test_parse_time_accepts_supported_formats(value: str,
                                               ) -> None:
     assert journeys.parse_time(value) == expected
 
+
 def test_parse_time_rejects_invalid_time() -> None:
     with pytest.raises(journeys.JourneyParseError,
                        match="Unsupported journey time"):
         journeys.parse_time("25:00")
 
+
 def test_parse_optional_time_returns_none_for_blank_value() -> None:
     assert journeys.parse_optional_time("") is None
     assert journeys.parse_optional_time("   ") is None
 
+
 def test_parse_optional_time_parses_non_blank_value() -> None:
     assert journeys.parse_optional_time("08:25") == time(8, 25)
+
 
 @pytest.mark.parametrize(
     ("value", "expected"),
@@ -103,13 +242,15 @@ def test_parse_amount_accepts_supported_values(value: str,
                                                ) -> None:
     assert journeys.parse_amount(value) == expected
 
+
 def test_parse_amount_rejects_invalid_value() -> None:
     with pytest.raises(journeys.JourneyParseError,
                        match="Unsupported journey charge"):
         journeys.parse_amount("not a charge")
 
+
 def test_journey_from_row_creates_typed_journey() -> None:
-    journey = journeys.journey_from_row(processed_row())
+    journey = journeys.journey_from_row(normalized_row())
     assert journey == journeys.Journey(
         date=date(2026, 3, 1),
         start_time=time(8, 10),
@@ -120,20 +261,23 @@ def test_journey_from_row_creates_typed_journey() -> None:
         end_network="underground",
         charged_amount=Decimal("2.80"))
 
+
 def test_journey_from_row_allows_missing_end_time() -> None:
-    journey = journeys.journey_from_row(processed_row(end_time=""))
+    journey = journeys.journey_from_row(normalized_row(end_time=""))
     assert journey.end_time is None
+
 
 def test_journey_from_row_strips_names_and_normalizes_networks() -> None:
     journey = journeys.journey_from_row(
-        processed_row(start_station="  Oxford Circus  ",
-                      end_station=" Bank ",
-                      start_network=" UNDERGROUND ",
-                      end_network=" Underground "))
+        normalized_row(start_station="  Oxford Circus  ",
+                       end_station=" Bank ",
+                       start_network=" UNDERGROUND ",
+                       end_network=" Underground "))
     assert journey.start_station == "Oxford Circus"
     assert journey.end_station == "Bank"
     assert journey.start_network == "underground"
     assert journey.end_network == "underground"
+
 
 @pytest.mark.parametrize(
     ("overrides", "message"),
@@ -149,27 +293,16 @@ def test_journey_from_row_rejects_invalid_values(
     message: str,
     ) -> None:
     with pytest.raises(journeys.JourneyParseError, match=message):
-        journeys.journey_from_row(processed_row(**overrides))
+        journeys.journey_from_row(normalized_row(**overrides))
+
 
 def test_journey_from_row_reports_csv_row_number() -> None:
-    row = processed_row()
+    row = normalized_row()
     del row["date"]
     with pytest.raises(journeys.JourneyParseError,
-                       match="Invalid processed journey at CSV row 7"):
+                       match="Invalid journey at CSV row 7"):
         journeys.journey_from_row(row, row_number=7)
 
-def test_load_processed_journeys_loads_every_row() -> None:
-    content = StringIO(
-        "date,start_time,end_time,start_station,end_station,"
-        "start_network,end_network,charged_amount\n"
-        "01/03/2026,08:10,08:25,Oxford Circus,Bank,"
-        "underground,underground,2.80\n"
-        "01/03/2026,09:00,09:20,Bank,Oxford Circus,"
-        "underground,underground,3.00\n")
-    loaded = journeys.load_processed_journeys(csv.DictReader(content))
-    assert len(loaded) == 2
-    assert loaded[0].start_station == "Oxford Circus"
-    assert loaded[1].charged_amount == Decimal("3.00")
 
 def test_load_raw_journeys_cleans_and_skips_unsupported_rows(
     tmp_path: Path,
@@ -193,55 +326,43 @@ def test_load_raw_journeys_cleans_and_skips_unsupported_rows(
             end_network="dlr",
             charged_amount=Decimal("2.8"))]
 
-def test_load_journeys_loads_processed_csv_and_sorts_it(
-    tmp_path: Path,
-    ) -> None:
-    csv_path = tmp_path / "processed.csv"
-    write_csv(
-        csv_path,
-        list(journeys.PROCESSED_FIELDS),
-        [processed_row(date="02/03/2026",
-                       start_time="09:00",
-                       end_time="09:15"),
-         processed_row(date="01/03/2026",
-                       start_time="10:00",
-                       end_time="10:15"),
-         processed_row(date="01/03/2026",
-                       start_time="08:00",
-                       end_time="08:15")])
-    loaded = journeys.load_journeys(csv_path)
-    assert [journey.starts_at for journey in loaded] == [
-        datetime(2026, 3, 1, 8, 0),
-        datetime(2026, 3, 1, 10, 0),
-        datetime(2026, 3, 2, 9, 0)]
 
-def test_load_journeys_accepts_additional_processed_columns(
-    tmp_path: Path,
-    ) -> None:
-    csv_path = tmp_path / "processed.csv"
-    fieldnames = list(journeys.PROCESSED_FIELDS) + ["extra"]
-    row = processed_row()
-    row["extra"] = "ignored"
-    write_csv(csv_path, fieldnames, [row])
-    loaded = journeys.load_journeys(csv_path)
-    assert len(loaded) == 1
-
-def test_load_journeys_loads_raw_csv(tmp_path: Path) -> None:
+def test_load_journeys_loads_raw_csv_and_sorts_it(tmp_path: Path) -> None:
     reference_dir = tmp_path / "reference"
     write_reference_files(reference_dir)
     csv_path = tmp_path / "raw.csv"
     write_csv(
         csv_path,
         list(journeys.RAW_FIELDS),
-        [{"Date": "01/03/2026",
-          "Start Time": "08:10",
-          "End Time": "08:25",
-          "Journey/Action": "Oxford Circus to Limehouse DLR",
-          "Charge": "£2.80"}])
+        [raw_row(date_value="02/03/2026", start_time="09:00"),
+         raw_row(date_value="01/03/2026", start_time="10:00"),
+         raw_row(date_value="01/03/2026", start_time="08:00")])
+    loaded = journeys.load_journeys(csv_path, reference_dir)
+    assert [journey.starts_at for journey in loaded] == [
+        datetime(2026, 3, 1, 8, 0),
+        datetime(2026, 3, 1, 10, 0),
+        datetime(2026, 3, 2, 9, 0)]
+
+
+def test_load_journeys_accepts_additional_raw_columns(tmp_path: Path) -> None:
+    reference_dir = tmp_path / "reference"
+    write_reference_files(reference_dir)
+    csv_path = tmp_path / "raw.csv"
+    fieldnames = list(journeys.RAW_FIELDS) + ["Extra"]
+    row = raw_row()
+    row["Extra"] = "ignored"
+    write_csv(csv_path, fieldnames, [row])
     loaded = journeys.load_journeys(csv_path, reference_dir)
     assert len(loaded) == 1
-    assert loaded[0].end_station == "Limehouse"
-    assert loaded[0].end_network == "dlr"
+
+
+def test_load_journeys_rejects_processed_csv(tmp_path: Path) -> None:
+    csv_path = tmp_path / "processed.csv"
+    write_csv(csv_path, list(normalized_row()), [normalized_row()])
+    with pytest.raises(journeys.JourneyParseError,
+                       match="raw TfL format"):
+        journeys.load_journeys(csv_path)
+
 
 def test_load_journeys_rejects_unknown_csv_format(tmp_path: Path) -> None:
     csv_path = tmp_path / "unknown.csv"
@@ -250,12 +371,16 @@ def test_load_journeys_rejects_unknown_csv_format(tmp_path: Path) -> None:
                        match="CSV does not match"):
         journeys.load_journeys(csv_path)
 
-def test_load_journeys_rejects_empty_processed_csv(tmp_path: Path) -> None:
+
+def test_load_journeys_rejects_empty_raw_csv(tmp_path: Path) -> None:
+    reference_dir = tmp_path / "reference"
+    write_reference_files(reference_dir)
     csv_path = tmp_path / "empty.csv"
-    write_csv(csv_path, list(journeys.PROCESSED_FIELDS), [])
+    write_csv(csv_path, list(journeys.RAW_FIELDS), [])
     with pytest.raises(journeys.JourneyParseError,
                        match="No supported journeys were found"):
-        journeys.load_journeys(csv_path)
+        journeys.load_journeys(csv_path, reference_dir)
+
 
 def test_load_journeys_rejects_raw_csv_without_supported_rows(
     tmp_path: Path,
@@ -266,11 +391,7 @@ def test_load_journeys_rejects_raw_csv_without_supported_rows(
     write_csv(
         csv_path,
         list(journeys.RAW_FIELDS),
-        [{"Date": "01/03/2026",
-          "Start Time": "08:10",
-          "End Time": "08:25",
-          "Journey/Action": "Oxford Circus to Unknown Station",
-          "Charge": "£2.80"}])
+        [raw_row(action="Oxford Circus to Unknown Station")])
     with pytest.raises(journeys.JourneyParseError,
                        match="No supported journeys were found"):
         journeys.load_journeys(csv_path, reference_dir)

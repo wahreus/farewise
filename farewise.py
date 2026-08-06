@@ -18,7 +18,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "journey_file",
         type=Path,
-        help="Raw TfL journey CSV or processed FareWise journey CSV")
+        help="Raw TfL journey history CSV")
     parser.add_argument(
         "--fares",
         type=Path,

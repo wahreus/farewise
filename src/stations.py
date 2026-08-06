@@ -6,6 +6,9 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 DATA_DIR = PROJECT_ROOT / "data"
 FARES_JSON = DATA_DIR / "reference" / "fares_2026.json"
 STATIONS_CSV = DATA_DIR / "reference" / "london_underground_stations.csv"
+NETWORK_FILES = {"underground": "london_underground_stations.csv",
+                 "dlr": "london_dlr_stations.csv",
+                 "overground": "london_overground_stations.csv"}
 
 @dataclass
 class Station:
