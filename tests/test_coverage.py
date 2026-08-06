@@ -1,0 +1,144 @@
+from datetime import date, time
+from decimal import Decimal
+from pathlib import Path
+
+from src import coverage
+from src.journeys import Journey
+from src.stations import Station
+
+
+def sample_stations() -> dict[tuple[str, str], Station]:
+    return {
+        coverage.station_key("underground", "Oxford Circus"): Station(
+            name="Oxford Circus",
+            lines=["Central", "Victoria"],
+            zones=["1"]),
+        coverage.station_key("underground", "Earl's Court"): Station(
+            name="Earl's Court",
+            lines=["District", "Piccadilly"],
+            zones=["1", "2"]),
+        coverage.station_key("dlr", "Stratford"): Station(
+            name="Stratford",
+            lines=["DLR"],
+            zones=["2/3"]),
+        coverage.station_key("overground", "Watford Junction"): Station(
+            name="Watford Junction",
+            lines=["Lioness"],
+            zones=["Special"])}
+
+
+def make_journey(start_station: str = "Oxford Circus",
+                 end_station: str = "Earl's Court",
+                 start_network: str = "underground",
+                 end_network: str = "underground",
+                 ) -> Journey:
+    return Journey(date=date(2026, 3, 1),
+                   start_time=time(8, 10),
+                   end_time=time(8, 25),
+                   start_station=start_station,
+                   end_station=end_station,
+                   start_network=start_network,
+                   end_network=end_network,
+                   charged_amount=Decimal("2.80"))
+
+
+def write_station_file(path: Path,
+                       station_name: str,
+                       zones: str,
+                       ) -> None:
+    path.write_text(
+        "Station,Line(s),Zone(s)\n"
+        f"{station_name},Example,{zones}\n",
+        encoding="utf-8")
+
+
+def test_station_key_normalizes_network_and_station_name() -> None:
+    assert coverage.station_key(" UNDERGROUND ", " Oxford Circus ") == (
+        "underground",
+        "oxford circus")
+
+
+def test_load_station_lookup_loads_all_network_files(tmp_path) -> None:
+    write_station_file(tmp_path / "london_underground_stations.csv",
+                       "Oxford Circus",
+                       "1")
+    write_station_file(tmp_path / "london_dlr_stations.csv",
+                       "Limehouse",
+                       "2")
+    write_station_file(tmp_path / "london_overground_stations.csv",
+                       "Surrey Quays",
+                       "2")
+    stations = coverage.load_station_lookup(tmp_path)
+    assert set(stations) == {
+        ("underground", "oxford circus"),
+        ("dlr", "limehouse"),
+        ("overground", "surrey quays")}
+    assert stations[("dlr", "limehouse")].name == "Limehouse"
+
+
+def test_station_zones_returns_all_numeric_zones() -> None:
+    assert coverage.station_zones("Stratford",
+                                  "dlr",
+                                  sample_stations()) == {2, 3}
+
+
+def test_station_zones_normalizes_lookup_values() -> None:
+    assert coverage.station_zones("  OXFORD CIRCUS ",
+                                  " UNDERGROUND ",
+                                  sample_stations()) == {1}
+
+
+def test_station_zones_returns_none_for_unknown_station() -> None:
+    assert coverage.station_zones("Unknown",
+                                  "underground",
+                                  sample_stations()) is None
+
+
+def test_station_zones_returns_none_without_numeric_zone() -> None:
+    assert coverage.station_zones("Watford Junction",
+                                  "overground",
+                                  sample_stations()) is None
+
+
+def test_station_is_covered_accepts_boundary_station_zone() -> None:
+    assert coverage.station_is_covered("Stratford",
+                                       "dlr",
+                                       2,
+                                       sample_stations())
+
+
+def test_station_is_covered_rejects_station_outside_max_zone() -> None:
+    assert not coverage.station_is_covered("Stratford",
+                                           "dlr",
+                                           1,
+                                           sample_stations())
+
+
+def test_station_is_covered_rejects_unknown_station() -> None:
+    assert not coverage.station_is_covered("Unknown",
+                                           "underground",
+                                           2,
+                                           sample_stations())
+
+
+def test_journey_is_covered_requires_both_endpoints() -> None:
+    stations = sample_stations()
+    assert coverage.journey_is_covered(make_journey(), 1, stations)
+    assert not coverage.journey_is_covered(
+        make_journey(end_station="Stratford", end_network="dlr"),
+        1,
+        stations)
+
+
+def test_minimum_journey_max_zone_uses_lowest_zone_for_each_station() -> None:
+    journey = make_journey(end_station="Stratford", end_network="dlr")
+    assert coverage.minimum_journey_max_zone(
+        journey,
+        sample_stations()) == 2
+
+
+def test_minimum_journey_max_zone_returns_none_for_unknown_endpoint() -> None:
+    journey = make_journey(end_station="Unknown")
+    assert coverage.minimum_journey_max_zone(
+        journey,
+        sample_stations()) is None
