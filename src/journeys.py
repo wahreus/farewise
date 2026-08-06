@@ -11,6 +11,10 @@ REFERENCE_DIR = PROJECT_ROOT / "data" / "reference"
 DATE_FORMATS = ("%d-%b-%Y", "%Y-%m-%d", "%d/%m/%Y", "%d-%m-%Y")
 TIME_FORMATS = ("%H:%M", "%H:%M:%S")
 RAW_FIELDS = {"Date", "Start Time", "End Time", "Journey/Action", "Charge"}
+UNSUPPORTED_TRANSPORT_MODE = "unsupported_transport_mode"
+NON_JOURNEY_ACTION = "non_journey_action"
+UNKNOWN_STATION = "unknown_station"
+INVALID_CHARGE = "invalid_charge"
 
 class JourneyParseError(ValueError):
     pass
@@ -28,6 +32,29 @@ class Journey:
     @property
     def starts_at(self) -> datetime:
         return datetime.combine(self.date, self.start_time)
+
+@dataclass(frozen=True)
+class JourneyLoadSummary:
+    loaded_count: int
+    unsupported_transport_modes: int
+    non_journey_actions: int
+    unknown_stations: int
+    invalid_charges: int
+
+    @property
+    def skipped_count(self) -> int:
+        return (self.unsupported_transport_modes
+                + self.non_journey_actions
+                + self.unknown_stations
+                + self.invalid_charges)
+
+class JourneyList(list[Journey]):
+    def __init__(self,
+                 journeys: list[Journey],
+                 summary: JourneyLoadSummary,
+                 ) -> None:
+        super().__init__(journeys)
+        self.summary = summary
 
 def clean_text(value: object) -> str:
     return " ".join(str(value or "").strip().split())
@@ -76,19 +103,29 @@ def remove_marker(endpoint: str) -> tuple[str, str] | None:
         return text[:-4].strip(), "dlr"
     return text, "underground"
 
+def parse_endpoint_with_reason(
+        endpoint: str,
+        stations: dict[str, dict[str, str]],
+        ) -> tuple[tuple[str, str] | None, str | None]:
+    parsed = remove_marker(endpoint)
+    if parsed is None:
+        return None, UNSUPPORTED_TRANSPORT_MODE
+    station, network = parsed
+    if network == "unknown":
+        return (station, network), None
+    network_stations = stations.get(network)
+    if network_stations is None:
+        return None, UNSUPPORTED_TRANSPORT_MODE
+    official_name = network_stations.get(key(station))
+    if official_name is None:
+        return None, UNKNOWN_STATION
+    return (official_name, network), None
+
 def parse_endpoint(endpoint: str,
                    stations: dict[str, dict[str, str]],
                    ) -> tuple[str, str] | None:
-    parsed = remove_marker(endpoint)
-    if parsed is None:
-        return None
-    station, network = parsed
-    if network == "unknown":
-        return station, network
-    official_name = stations[network].get(key(station))
-    if official_name is None:
-        return None
-    return official_name, network
+    parsed, _ = parse_endpoint_with_reason(endpoint, stations)
+    return parsed
 
 def clean_charge(value: object) -> str | None:
     text = clean_text(value).replace("£", "").replace(",", "")
@@ -99,27 +136,45 @@ def clean_charge(value: object) -> str | None:
     except ValueError:
         return None
 
+def clean_row_with_reason(
+        row: dict[str, str],
+        stations: dict[str, dict[str, str]],
+        ) -> tuple[dict[str, str] | None, str | None]:
+    action_text = row.get("Journey/Action", "")
+    action = split_action(action_text)
+    if action is None:
+        if "journey" in key(action_text):
+            return None, UNSUPPORTED_TRANSPORT_MODE
+        return None, NON_JOURNEY_ACTION
+    start, start_reason = parse_endpoint_with_reason(action[0], stations)
+    end, end_reason = parse_endpoint_with_reason(action[1], stations)
+    reasons = {start_reason, end_reason}
+    if UNSUPPORTED_TRANSPORT_MODE in reasons:
+        return None, UNSUPPORTED_TRANSPORT_MODE
+    if UNKNOWN_STATION in reasons:
+        return None, UNKNOWN_STATION
+    charge = clean_charge(row.get("Charge", ""))
+    if charge is None:
+        return None, INVALID_CHARGE
+    if start is None or end is None:
+        return None, UNKNOWN_STATION
+    start_station, start_network = start
+    end_station, end_network = end
+    return ({"date": clean_text(row.get("Date", "")),
+             "start_time": clean_text(row.get("Start Time", "")),
+             "end_time": clean_text(row.get("End Time", "")),
+             "start_station": start_station,
+             "end_station": end_station,
+             "start_network": start_network,
+             "end_network": end_network,
+             "charged_amount": charge},
+            None)
+
 def clean_row(row: dict[str, str],
               stations: dict[str, dict[str, str]],
               ) -> dict[str, str] | None:
-    action = split_action(row.get("Journey/Action", ""))
-    if action is None:
-        return None
-    start = parse_endpoint(action[0], stations)
-    end = parse_endpoint(action[1], stations)
-    charge = clean_charge(row.get("Charge", ""))
-    if start is None or end is None or charge is None:
-        return None
-    start_station, start_network = start
-    end_station, end_network = end
-    return {"date": clean_text(row.get("Date", "")),
-            "start_time": clean_text(row.get("Start Time", "")),
-            "end_time": clean_text(row.get("End Time", "")),
-            "start_station": start_station,
-            "end_station": end_station,
-            "start_network": start_network,
-            "end_network": end_network,
-            "charged_amount": charge}
+    cleaned, _ = clean_row_with_reason(row, stations)
+    return cleaned
 
 def parse_date(value: str) -> date:
     text = value.strip()
@@ -176,26 +231,54 @@ def journey_from_row(row: dict[str, str],
         location = f" at CSV row {row_number}" if row_number is not None else ""
         raise JourneyParseError(f"Invalid journey{location}: {error}") from error
 
+def load_raw_journeys_with_summary(
+        reader: csv.DictReader,
+        reference_dir: str | Path,
+        ) -> tuple[list[Journey], JourneyLoadSummary]:
+    stations = read_reference_data(Path(reference_dir))
+    journeys = []
+    skipped = {UNSUPPORTED_TRANSPORT_MODE: 0,
+               NON_JOURNEY_ACTION: 0,
+               UNKNOWN_STATION: 0,
+               INVALID_CHARGE: 0}
+    for row_number, row in enumerate(reader, start=2):
+        cleaned, reason = clean_row_with_reason(row, stations)
+        if cleaned is None:
+            if reason is not None:
+                skipped[reason] += 1
+            continue
+        journeys.append(journey_from_row(cleaned, row_number))
+    summary = JourneyLoadSummary(
+        loaded_count=len(journeys),
+        unsupported_transport_modes=skipped[UNSUPPORTED_TRANSPORT_MODE],
+        non_journey_actions=skipped[NON_JOURNEY_ACTION],
+        unknown_stations=skipped[UNKNOWN_STATION],
+        invalid_charges=skipped[INVALID_CHARGE])
+    return journeys, summary
+
 def load_raw_journeys(reader: csv.DictReader,
                       reference_dir: str | Path,
                       ) -> list[Journey]:
-    stations = read_reference_data(Path(reference_dir))
-    journeys = []
-    for row_number, row in enumerate(reader, start=2):
-        cleaned = clean_row(row, stations)
-        if cleaned is not None:
-            journeys.append(journey_from_row(cleaned, row_number))
+    journeys, _ = load_raw_journeys_with_summary(reader, reference_dir)
     return journeys
 
-def load_journeys(csv_path: str | Path,
-                  reference_dir: str | Path = REFERENCE_DIR,
-                  ) -> list[Journey]:
+def load_journeys_with_summary(
+        csv_path: str | Path,
+        reference_dir: str | Path = REFERENCE_DIR,
+        ) -> tuple[list[Journey], JourneyLoadSummary]:
     with Path(csv_path).open(newline="", encoding="utf-8-sig") as file:
         reader = csv.DictReader(file)
         fields = set(reader.fieldnames or [])
         if not RAW_FIELDS.issubset(fields):
             raise JourneyParseError("CSV does not match the raw TfL format")
-        journeys = load_raw_journeys(reader, reference_dir)
+        journeys, summary = load_raw_journeys_with_summary(reader, reference_dir)
     if not journeys:
         raise JourneyParseError("No supported journeys were found in the CSV")
-    return sorted(journeys, key=lambda journey: journey.starts_at)
+    return (sorted(journeys, key=lambda journey: journey.starts_at),
+            summary)
+
+def load_journeys(csv_path: str | Path,
+                  reference_dir: str | Path = REFERENCE_DIR,
+                  ) -> list[Journey]:
+    journeys, summary = load_journeys_with_summary(csv_path, reference_dir)
+    return JourneyList(journeys, summary)

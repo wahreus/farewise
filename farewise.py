@@ -6,7 +6,7 @@ from pathlib import Path
 
 from src.coverage import REFERENCE_DIR, load_station_lookup
 from src.fares import FARES_JSON, load_fare_data
-from src.journeys import load_journeys
+from src.journeys import JourneyLoadSummary, load_journeys
 from src.optimizer import optimize_fares
 from src.report import print_report
 
@@ -32,6 +32,34 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
+def count_label(count: int, singular: str, plural: str) -> str:
+    """Format a count with the appropriate singular or plural label."""
+    label = singular if count == 1 else plural
+    return f"{count} {label}"
+
+
+def print_journey_summary(summary: JourneyLoadSummary) -> None:
+    """Print the number of loaded journeys and categorized skipped rows."""
+    print(f"\nSkipped {summary.skipped_count} CSV rows:")
+    if summary.unsupported_transport_modes:
+        print("- " + count_label(summary.unsupported_transport_modes,
+                                 "unsupported transport mode",
+                                 "unsupported transport modes"))
+    if summary.non_journey_actions:
+        print("- " + count_label(summary.non_journey_actions,
+                                 "non-journey action",
+                                 "non-journey actions"))
+    if summary.unknown_stations:
+        print("- " + count_label(summary.unknown_stations,
+                                 "unknown station",
+                                 "unknown stations"))
+    if summary.invalid_charges:
+        print("- " + count_label(summary.invalid_charges,
+                                 "invalid charge",
+                                 "invalid charges"))
+    print(f"Loaded {summary.loaded_count} supported journeys.")
+
+
 def main() -> int:
     """Run the complete FareWise comparison."""
     args = build_parser().parse_args()
@@ -43,6 +71,9 @@ def main() -> int:
     except (FileNotFoundError, OSError, ValueError, KeyError) as error:
         print(f"FareWise error: {error}", file=sys.stderr)
         return 1
+    summary = getattr(journeys, "summary", None)
+    if summary is not None:
+        print_journey_summary(summary)
     print_report(result)
     return 0
 
