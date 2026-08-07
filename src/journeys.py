@@ -1,3 +1,5 @@
+"""Journey parsing, normalization and loading for TfL history data."""
+
 import csv
 import re
 from dataclasses import dataclass
@@ -17,10 +19,12 @@ UNKNOWN_STATION = "unknown_station"
 INVALID_CHARGE = "invalid_charge"
 
 class JourneyParseError(ValueError):
+    """Raised when journey data cannot be parsed or validated."""
     pass
 
 @dataclass(frozen=True)
 class Journey:
+    """Normalized representation of one supported TfL journey."""
     date: date
     start_time: time
     end_time: time | None
@@ -31,10 +35,12 @@ class Journey:
     charged_amount: Decimal
     @property
     def starts_at(self) -> datetime:
+        """Return the journey start date and time as one datetime."""
         return datetime.combine(self.date, self.start_time)
 
 @dataclass(frozen=True)
 class JourneyLoadSummary:
+    """Counts loaded journeys and categorized skipped rows."""
     loaded_count: int
     unsupported_transport_modes: int
     non_journey_actions: int
@@ -43,26 +49,32 @@ class JourneyLoadSummary:
 
     @property
     def skipped_count(self) -> int:
+        """Return the total number of skipped CSV rows."""
         return (self.unsupported_transport_modes
                 + self.non_journey_actions
                 + self.unknown_stations
                 + self.invalid_charges)
 
 class JourneyList(list[Journey]):
+    """Journey list carrying its associated loading summary."""
     def __init__(self,
                  journeys: list[Journey],
                  summary: JourneyLoadSummary,
                  ) -> None:
+        """Store loaded journeys together with their summary."""
         super().__init__(journeys)
         self.summary = summary
 
 def clean_text(value: object) -> str:
+    """Normalize whitespace and convert missing values to empty text."""
     return " ".join(str(value or "").strip().split())
 
 def key(value: object) -> str:
+    """Return normalized case-insensitive text for lookups."""
     return clean_text(value).casefold()
 
 def read_station_names(path: Path) -> dict[str, str]:
+    """Load normalized station names from one reference CSV."""
     stations: dict[str, str] = {}
     with path.open(newline="", encoding="utf-8-sig") as file:
         reader = csv.DictReader(file)
@@ -73,10 +85,12 @@ def read_station_names(path: Path) -> dict[str, str]:
     return stations
 
 def read_reference_data(reference_dir: Path) -> dict[str, dict[str, str]]:
+    """Load station names for all supported transport networks."""
     return {network: read_station_names(reference_dir / filename)
             for network, filename in NETWORK_FILES.items()}
 
 def split_action(action: str) -> tuple[str, str] | None:
+    """Split a journey action into start and end endpoints."""
     parts = re.split(r"\s+to\s+", clean_text(action), maxsplit=1,
                      flags=re.IGNORECASE)
     if len(parts) != 2:
@@ -84,6 +98,7 @@ def split_action(action: str) -> tuple[str, str] | None:
     return parts[0], parts[1]
 
 def remove_marker(endpoint: str) -> tuple[str, str] | None:
+    """Extract a station name and network from an endpoint label."""
     text = clean_text(endpoint)
     lower = text.casefold()
     if lower in {"[no touch-out]", "[no touch-in]"}:
@@ -107,6 +122,7 @@ def parse_endpoint_with_reason(
         endpoint: str,
         stations: dict[str, dict[str, str]],
         ) -> tuple[tuple[str, str] | None, str | None]:
+    """Resolve an endpoint and report why unsupported data fails."""
     parsed = remove_marker(endpoint)
     if parsed is None:
         return None, UNSUPPORTED_TRANSPORT_MODE
@@ -124,10 +140,12 @@ def parse_endpoint_with_reason(
 def parse_endpoint(endpoint: str,
                    stations: dict[str, dict[str, str]],
                    ) -> tuple[str, str] | None:
+    """Resolve an endpoint to its official station name and network."""
     parsed, _ = parse_endpoint_with_reason(endpoint, stations)
     return parsed
 
 def clean_charge(value: object) -> str | None:
+    """Normalize a raw charge into a numeric string when valid."""
     text = clean_text(value).replace("£", "").replace(",", "")
     if not text:
         return None
@@ -140,6 +158,7 @@ def clean_row_with_reason(
         row: dict[str, str],
         stations: dict[str, dict[str, str]],
         ) -> tuple[dict[str, str] | None, str | None]:
+    """Normalize a raw TfL row and classify rejected rows."""
     action_text = row.get("Journey/Action", "")
     action = split_action(action_text)
     if action is None:
@@ -173,10 +192,12 @@ def clean_row_with_reason(
 def clean_row(row: dict[str, str],
               stations: dict[str, dict[str, str]],
               ) -> dict[str, str] | None:
+    """Normalize a raw TfL journey row when supported."""
     cleaned, _ = clean_row_with_reason(row, stations)
     return cleaned
 
 def parse_date(value: str) -> date:
+    """Parse a journey date using the supported date formats."""
     text = value.strip()
     for date_format in DATE_FORMATS:
         try:
@@ -186,6 +207,7 @@ def parse_date(value: str) -> date:
     raise JourneyParseError(f"Unsupported journey date: {value!r}")
 
 def parse_time(value: str) -> time:
+    """Parse a journey time using the supported time formats."""
     text = value.strip()
     for time_format in TIME_FORMATS:
         try:
@@ -195,11 +217,13 @@ def parse_time(value: str) -> time:
     raise JourneyParseError(f"Unsupported journey time: {value!r}")
 
 def parse_optional_time(value: str) -> time | None:
+    """Parse a journey time or return None for a blank value."""
     if not value.strip():
         return None
     return parse_time(value)
 
 def parse_amount(value: str) -> Decimal:
+    """Parse a journey charge as an exact Decimal value."""
     text = value.strip().replace("£", "").replace(",", "")
     try:
         return Decimal(text)
@@ -209,6 +233,7 @@ def parse_amount(value: str) -> Decimal:
 def journey_from_row(row: dict[str, str],
                      row_number: int | None = None,
                      ) -> Journey:
+    """Build a validated Journey from a normalized row."""
     try:
         start_station = row["start_station"].strip()
         end_station = row["end_station"].strip()
@@ -235,6 +260,7 @@ def load_raw_journeys_with_summary(
         reader: csv.DictReader,
         reference_dir: str | Path,
         ) -> tuple[list[Journey], JourneyLoadSummary]:
+    """Load supported raw rows and count skipped row categories."""
     stations = read_reference_data(Path(reference_dir))
     journeys = []
     skipped = {UNSUPPORTED_TRANSPORT_MODE: 0,
@@ -259,6 +285,7 @@ def load_raw_journeys_with_summary(
 def load_raw_journeys(reader: csv.DictReader,
                       reference_dir: str | Path,
                       ) -> list[Journey]:
+    """Load supported journeys from a raw CSV reader."""
     journeys, _ = load_raw_journeys_with_summary(reader, reference_dir)
     return journeys
 
@@ -266,6 +293,7 @@ def load_journeys_with_summary(
         csv_path: str | Path,
         reference_dir: str | Path = REFERENCE_DIR,
         ) -> tuple[list[Journey], JourneyLoadSummary]:
+    """Load, validate and sort journeys with a loading summary."""
     with Path(csv_path).open(newline="", encoding="utf-8-sig") as file:
         reader = csv.DictReader(file)
         fields = set(reader.fieldnames or [])
@@ -280,5 +308,6 @@ def load_journeys_with_summary(
 def load_journeys(csv_path: str | Path,
                   reference_dir: str | Path = REFERENCE_DIR,
                   ) -> list[Journey]:
+    """Load sorted journeys and attach their loading summary."""
     journeys, summary = load_journeys_with_summary(csv_path, reference_dir)
     return JourneyList(journeys, summary)

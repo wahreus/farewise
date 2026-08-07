@@ -1,3 +1,5 @@
+"""Travelcard option construction and journey coverage evaluation."""
+
 import re
 from dataclasses import dataclass
 from datetime import date, time
@@ -15,6 +17,7 @@ OFF_PEAK_START = time(9, 30)
 ZERO = Decimal("0.00")
 
 class TravelcardType(str, Enum):
+    """Travelcard products considered by the optimizer."""
     ONE_DAY_ANYTIME = "1 Day Anytime"
     ONE_DAY_OFF_PEAK = "1 Day Off-Peak"
     SEVEN_DAY = "7 Day"
@@ -22,6 +25,7 @@ class TravelcardType(str, Enum):
 
 @dataclass(frozen=True)
 class TravelcardOption:
+    """One Travelcard product, zone range, period and price."""
     product: TravelcardType
     zone_name: str
     max_zone: int
@@ -29,18 +33,21 @@ class TravelcardOption:
     price: Decimal
 
 def max_zone_from_name(zone_name: str) -> int:
+    """Extract the highest zone number from a fare-zone name."""
     numbers = re.findall(r"\d+", zone_name)
     if not numbers:
         raise ValueError(f"Invalid fare zone name: {zone_name!r}")
     return int(numbers[-1])
 
 def display_zone_name(zone_name: str) -> str:
+    """Convert an internal zone name to display text."""
     max_zone = max_zone_from_name(zone_name)
     if max_zone == 1:
         return "Zone 1"
     return f"Zones 1-{max_zone}"
 
 def period_kind(product: TravelcardType) -> PeriodKind:
+    """Map a Travelcard product to its validity period kind."""
     if product in {TravelcardType.ONE_DAY_ANYTIME,
                    TravelcardType.ONE_DAY_OFF_PEAK}:
         return PeriodKind.ONE_DAY
@@ -51,6 +58,7 @@ def period_kind(product: TravelcardType) -> PeriodKind:
 def product_price(option: UndergroundFareOption,
                   product: TravelcardType,
                   ) -> Decimal:
+    """Return the configured price for a Travelcard product."""
     prices = option.travelcard
     if product == TravelcardType.ONE_DAY_ANYTIME:
         return prices.one_day_anytime
@@ -63,6 +71,7 @@ def product_price(option: UndergroundFareOption,
 def build_travelcard_options(start_date: date,
                              fare_data: FareData,
                              ) -> list[TravelcardOption]:
+    """Build all Travelcard options starting on a given date."""
     options = []
     for zone_name, fare_option in fare_data.underground.items():
         max_zone = max_zone_from_name(zone_name)
@@ -77,12 +86,14 @@ def build_travelcard_options(start_date: date,
     return options
 
 def off_peak_eligible(journey: Journey) -> bool:
+    """Return whether a journey meets the simplified off-peak rule."""
     return journey.date.weekday() >= 5 or journey.start_time >= OFF_PEAK_START
 
 def option_covers_journey(option: TravelcardOption,
                           journey: Journey,
                           stations: dict[tuple[str, str], Station],
                           ) -> bool:
+    """Return whether a Travelcard option covers a journey."""
     if not option.period.contains(journey.date):
         return False
     if (option.product == TravelcardType.ONE_DAY_OFF_PEAK
@@ -94,6 +105,7 @@ def evaluate_travelcard(option: TravelcardOption,
                         journeys: Iterable[Journey],
                         stations: dict[tuple[str, str], Station],
                         ) -> TravelcardSelection:
+    """Evaluate covered journeys and outside PAYG for one option."""
     covered_count = 0
     uncovered_count = 0
     outside_payg_cost = ZERO

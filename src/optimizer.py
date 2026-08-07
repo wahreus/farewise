@@ -1,3 +1,5 @@
+"""Fare optimization logic for comparing PAYG and Travelcard strategies."""
+
 from datetime import date, timedelta
 from decimal import Decimal
 from functools import lru_cache
@@ -19,12 +21,14 @@ ZERO = Decimal("0.00")
 def selection_key(total_cost: Decimal,
                   selections: tuple[PaymentSelection, ...],
                   ) -> tuple[Decimal, int, int]:
+    """Build the ordering key used to compare fare strategies."""
     travelcard_count = sum(isinstance(selection, TravelcardSelection)
                            for selection in selections)
     return total_cost, travelcard_count, len(selections)
 
 def merge_adjacent_payg(selections: tuple[PaymentSelection, ...],
                         ) -> tuple[PaymentSelection, ...]:
+    """Merge consecutive PAYG selections into continuous periods."""
     merged: list[PaymentSelection] = []
     for selection in selections:
         if (isinstance(selection, PaygSelection)
@@ -45,6 +49,7 @@ def merge_adjacent_payg(selections: tuple[PaymentSelection, ...],
 def build_warnings(journeys: list[Journey],
                    fare_data: FareData,
                    ) -> tuple[str, ...]:
+    """Build limitation warnings for an optimization result."""
     warnings = [
         "Travelcard coverage is estimated from journey endpoints; routes "
         "and boundary extension fares are not modelled.",
@@ -68,6 +73,7 @@ def optimize_fares(journeys: Iterable[Journey],
                    stations: dict[tuple[str, str], Station],
                    fare_data: FareData,
                    ) -> OptimizationResult:
+    """Find the lowest-cost combination of PAYG and Travelcards."""
     journey_list = sorted(journeys, key=lambda journey: journey.starts_at)
     if not journey_list:
         raise ValueError("At least one journey is required")
@@ -78,6 +84,7 @@ def optimize_fares(journeys: Iterable[Journey],
 
     @lru_cache(maxsize=None)
     def solve(day_index: int) -> tuple[Decimal, tuple[PaymentSelection, ...]]:
+        """Return the cheapest strategy from the given history day onward."""
         if day_index >= history_day_count:
             return ZERO, ()
         current_date = history_start + timedelta(days=day_index)

@@ -1,27 +1,34 @@
+"""Date-period utilities for FareWise payment products."""
+
 import calendar
 from dataclasses import dataclass
 from datetime import date, timedelta
 from enum import Enum
 
 class PeriodKind(str, Enum):
+    """Supported validity periods for FareWise payment products."""
     ONE_DAY = "one_day"
     SEVEN_DAY = "seven_day"
     MONTHLY = "monthly"
 
 @dataclass(frozen=True)
 class DatePeriod:
+    """Inclusive start and end dates for a payment period."""
     kind: PeriodKind
     start_date: date
     end_date: date
 
     def contains(self, value: date) -> bool:
+        """Return whether a date falls within the period."""
         return self.start_date <= value <= self.end_date
 
     @property
     def day_count(self) -> int:
+        """Return the inclusive number of days in the period."""
         return (self.end_date - self.start_date).days + 1
 
 def monthly_end_date(start_date: date) -> date:
+    """Return the inclusive end date of a monthly period."""
     if start_date.month == 12:
         next_year = start_date.year + 1
         next_month = 1
@@ -35,6 +42,7 @@ def monthly_end_date(start_date: date) -> date:
     return same_day_next_month - timedelta(days=1)
 
 def build_period(start_date: date, kind: PeriodKind) -> DatePeriod:
+    """Build a date period for the requested period kind."""
     if kind == PeriodKind.ONE_DAY:
         end_date = start_date
     elif kind == PeriodKind.SEVEN_DAY:
@@ -48,6 +56,7 @@ def build_period(start_date: date, kind: PeriodKind) -> DatePeriod:
                       end_date=end_date)
 
 def start_dates(first_date: date, last_date: date) -> list[date]:
+    """Return every date in an inclusive range."""
     if last_date < first_date:
         return []
     day_count = (last_date - first_date).days + 1

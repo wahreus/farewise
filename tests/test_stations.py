@@ -1,6 +1,9 @@
+"""Tests for loading and normalizing station reference data."""
+
 from src.stations import Station, load_station_data
 
 def test_load_station_data_parses_station_lines_and_zones(tmp_path) -> None:
+    """Verify that load station data parses station lines and zones."""
     station_path = tmp_path / "stations.csv"
     station_path.write_text("Station,Line(s),Zone(s)\n"
                             "Earl's Court,District | Piccadilly,1 | 2\n"
@@ -17,6 +20,7 @@ def test_load_station_data_parses_station_lines_and_zones(tmp_path) -> None:
         zones=["1"])
 
 def test_load_station_data_strips_station_name(tmp_path) -> None:
+    """Verify that load station data strips station name."""
     station_path = tmp_path / "stations.csv"
     station_path.write_text(
         "Station,Line(s),Zone(s)\n"

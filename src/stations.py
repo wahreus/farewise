@@ -1,3 +1,5 @@
+"""Station reference models and CSV loading utilities."""
+
 import csv
 from dataclasses import dataclass
 from pathlib import Path
@@ -12,11 +14,13 @@ NETWORK_FILES = {"underground": "london_underground_stations.csv",
 
 @dataclass
 class Station:
+    """Station name, served lines and fare zones."""
     name: str
     lines: list[str]
     zones: list[str]
 
 def load_station_data(csv_path: str | Path) -> dict[str, Station]:
+    """Load station records from a reference CSV file."""
     stations = {}
     with open(csv_path, newline="", encoding="utf-8-sig") as file:
         reader = csv.DictReader(file)
@@ -29,6 +33,7 @@ def load_station_data(csv_path: str | Path) -> dict[str, Station]:
     return stations
 
 def main():
+    """Load station data and print a small inspection summary."""
     stations = load_station_data(STATIONS_CSV)
     print(f"Loaded {len(stations)} stations")
     station = stations["earl's court"]

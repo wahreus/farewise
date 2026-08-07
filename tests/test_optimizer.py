@@ -1,3 +1,5 @@
+"""Tests for fare optimization, selection merging, and warnings."""
+
 from datetime import date, time
 from decimal import Decimal
 
@@ -20,6 +22,7 @@ def make_journey(journey_date: date,
                  charged_amount: str = "4.00",
                  end_station: str = "Bank",
                  ) -> Journey:
+    """Build a representative journey for optimizer tests."""
     return Journey(date=journey_date,
                    start_time=time(8, 10),
                    end_time=time(8, 25),
@@ -36,6 +39,7 @@ def make_fare_data(one_day_anytime: str = "20.00",
                    monthly: str = "100.00",
                    valid_from: str = "2026-03-01",
                    ) -> FareData:
+    """Build configurable fare data for optimizer scenarios."""
     option = UndergroundFareOption(
         pay_as_you_go=PayAsYouGoCaps(
             daily_anytime_cap=Decimal("8.90"),
@@ -52,6 +56,7 @@ def make_fare_data(one_day_anytime: str = "20.00",
 
 
 def sample_stations() -> dict[tuple[str, str], Station]:
+    """Return representative station data across covered zones."""
     return {("underground", "oxford circus"): Station(
                 name="Oxford Circus",
                 lines=["Central", "Victoria"],
@@ -71,6 +76,7 @@ def payg_selection(start_date: date,
                    cost: str,
                    journey_count: int,
                    ) -> PaygSelection:
+    """Build a PAYG selection with configurable dates and cost."""
     return PaygSelection(start_date=start_date,
                          end_date=end_date,
                          cost=Decimal(cost),
@@ -78,6 +84,7 @@ def payg_selection(start_date: date,
 
 
 def travelcard_selection() -> TravelcardSelection:
+    """Build a representative seven-day Travelcard selection."""
     return TravelcardSelection(product_name="7 Day",
                                zone_name="Zones 1–2",
                                max_zone=2,
@@ -90,6 +97,7 @@ def travelcard_selection() -> TravelcardSelection:
 
 
 def test_selection_key_counts_travelcards_and_selections() -> None:
+    """Verify that selection key counts travelcards and selections."""
     selections = (payg_selection(date(2026, 3, 1),
                                  date(2026, 3, 1),
                                  "4.00",
@@ -102,6 +110,7 @@ def test_selection_key_counts_travelcards_and_selections() -> None:
 
 
 def test_merge_adjacent_payg_combines_consecutive_selections() -> None:
+    """Verify that merge adjacent PAYG combines consecutive selections."""
     selections = (
         payg_selection(date(2026, 3, 1), date(2026, 3, 1), "4.00", 1),
         payg_selection(date(2026, 3, 2), date(2026, 3, 2), "5.00", 2),
@@ -112,6 +121,7 @@ def test_merge_adjacent_payg_combines_consecutive_selections() -> None:
 
 
 def test_merge_adjacent_payg_does_not_merge_across_travelcard() -> None:
+    """Verify that merge adjacent PAYG does not merge across travelcard."""
     first = payg_selection(date(2026, 3, 1),
                            date(2026, 3, 1),
                            "4.00",
@@ -125,6 +135,7 @@ def test_merge_adjacent_payg_does_not_merge_across_travelcard() -> None:
 
 
 def test_build_warnings_returns_standard_limitations() -> None:
+    """Verify that build warnings returns standard limitations."""
     warnings = build_warnings([make_journey(date(2026, 3, 1))],
                               make_fare_data())
     assert len(warnings) == 3
@@ -134,6 +145,7 @@ def test_build_warnings_returns_standard_limitations() -> None:
 
 
 def test_build_warnings_adds_warning_for_older_journeys() -> None:
+    """Verify that build warnings adds warning for older journeys."""
     warnings = build_warnings([make_journey(date(2026, 2, 28))],
                               make_fare_data())
     assert len(warnings) == 4
@@ -143,17 +155,20 @@ def test_build_warnings_adds_warning_for_older_journeys() -> None:
 
 
 def test_build_warnings_ignores_invalid_valid_from_date() -> None:
+    """Verify that build warnings ignores invalid valid from date."""
     warnings = build_warnings([make_journey(date(2026, 2, 28))],
                               make_fare_data(valid_from="unknown"))
     assert len(warnings) == 3
 
 
 def test_optimize_fares_rejects_empty_journey_history() -> None:
+    """Verify that optimize fares rejects empty journey history."""
     with pytest.raises(ValueError, match="At least one journey is required"):
         optimize_fares([], sample_stations(), make_fare_data())
 
 
 def test_optimize_fares_uses_payg_when_travelcards_cost_more() -> None:
+    """Verify that optimize fares uses PAYG when travelcards cost more."""
     journeys = [make_journey(date(2026, 3, 2), "4.00"),
                 make_journey(date(2026, 3, 1), "4.00")]
     result = optimize_fares(journeys,
@@ -172,6 +187,7 @@ def test_optimize_fares_uses_payg_when_travelcards_cost_more() -> None:
 
 
 def test_optimize_fares_keeps_separate_payg_periods_across_empty_day() -> None:
+    """Verify that optimize fares keeps separate PAYG periods across empty day."""
     journeys = [make_journey(date(2026, 3, 1), "4.00"),
                 make_journey(date(2026, 3, 3), "5.00")]
     result = optimize_fares(journeys,
@@ -189,6 +205,7 @@ def test_optimize_fares_keeps_separate_payg_periods_across_empty_day() -> None:
 
 
 def test_optimize_fares_chooses_cheaper_seven_day_travelcard() -> None:
+    """Verify that optimize fares chooses cheaper seven day travelcard."""
     journeys = [make_journey(date(2026, 3, 1), "4.00"),
                 make_journey(date(2026, 3, 2), "4.00")]
     result = optimize_fares(
@@ -208,6 +225,7 @@ def test_optimize_fares_chooses_cheaper_seven_day_travelcard() -> None:
 
 
 def test_optimize_fares_prefers_payg_when_cost_is_tied() -> None:
+    """Verify that optimize fares prefers PAYG when cost is tied."""
     journey = make_journey(date(2026, 3, 1), "4.00")
     result = optimize_fares(
         [journey],
@@ -225,6 +243,7 @@ def test_optimize_fares_prefers_payg_when_cost_is_tied() -> None:
 
 
 def test_optimize_fares_keeps_outside_journey_as_recorded_payg() -> None:
+    """Verify that optimize fares keeps outside journey as recorded PAYG."""
     journeys = [make_journey(date(2026, 3, 1), "4.00"),
                 make_journey(date(2026, 3, 2),
                              "6.00",

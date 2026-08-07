@@ -1,3 +1,5 @@
+"""Tests for PAYG grouping, totals, and selection creation."""
+
 from datetime import date, time
 from decimal import Decimal
 
@@ -11,6 +13,7 @@ from src.results import PaygSelection
 def make_journey(journey_date: date,
                  charged_amount: str,
                  ) -> Journey:
+    """Build a journey with the supplied date and recorded charge."""
     return Journey(date=journey_date,
                    start_time=time(8, 10),
                    end_time=time(8, 25),
@@ -22,6 +25,7 @@ def make_journey(journey_date: date,
 
 
 def test_group_journeys_by_date_groups_matching_dates() -> None:
+    """Verify that group journeys by date groups matching dates."""
     first_date = date(2026, 3, 1)
     second_date = date(2026, 3, 2)
     journeys = [make_journey(first_date, "2.80"),
@@ -34,20 +38,24 @@ def test_group_journeys_by_date_groups_matching_dates() -> None:
 
 
 def test_group_journeys_by_date_accepts_empty_iterable() -> None:
+    """Verify that group journeys by date accepts empty iterable."""
     assert group_journeys_by_date([]) == {}
 
 
 def test_calculate_payg_total_sums_recorded_charges() -> None:
+    """Verify that calculate PAYG total sums recorded charges."""
     journeys = [make_journey(date(2026, 3, 1), "2.80"),
                 make_journey(date(2026, 3, 1), "3.10")]
     assert calculate_payg_total(journeys) == Decimal("5.90")
 
 
 def test_calculate_payg_total_returns_decimal_zero_for_no_journeys() -> None:
+    """Verify that calculate PAYG total returns decimal zero for no journeys."""
     assert calculate_payg_total([]) == Decimal("0.00")
 
 
 def test_create_payg_selection_builds_expected_selection() -> None:
+    """Verify that create PAYG selection builds expected selection."""
     selection_date = date(2026, 3, 1)
     journeys = [make_journey(selection_date, "2.80"),
                 make_journey(selection_date, "3.10")]
@@ -59,6 +67,7 @@ def test_create_payg_selection_builds_expected_selection() -> None:
 
 
 def test_create_payg_selection_consumes_iterable_once() -> None:
+    """Verify that create PAYG selection consumes iterable once."""
     selection_date = date(2026, 3, 1)
     journeys = (make_journey(selection_date, charge)
                 for charge in ["2.80", "3.10"])

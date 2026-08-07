@@ -1,22 +1,28 @@
+"""Formatting and output helpers for FareWise results."""
+
 from datetime import date
 from src.fares import format_money
 from src.results import OptimizationResult, PaygSelection, TravelcardSelection
 
 def format_date(value: date) -> str:
+    """Format a date for FareWise report output."""
     return value.strftime("%d %b %Y")
 
 def format_date_range(start_date: date, end_date: date) -> str:
+    """Format one date or an inclusive date range."""
     if start_date == end_date:
         return format_date(start_date)
     return f"{format_date(start_date)} - {format_date(end_date)}"
 
 def format_payg(selection: PaygSelection) -> str:
+    """Format one PAYG selection for the report."""
     period = format_date_range(selection.start_date, selection.end_date)
     journey_word = "journey" if selection.journey_count == 1 else "journeys"
     return (f"PAYG, {period}: {format_money(selection.total_cost)} "
             f"({selection.journey_count} {journey_word})")
 
 def format_travelcard(selection: TravelcardSelection) -> str:
+    """Format one Travelcard selection for the report."""
     period = format_date_range(selection.start_date, selection.end_date)
     cost_parts = f"card {format_money(selection.card_cost)}"
     if selection.outside_payg_cost:
@@ -28,6 +34,7 @@ def format_travelcard(selection: TravelcardSelection) -> str:
             f"{selection.uncovered_journey_count} outside)")
 
 def format_report(result: OptimizationResult) -> str:
+    """Build the complete human-readable FareWise report."""
     lines = [
         "\nFareWise result",
         "===============",
@@ -50,4 +57,5 @@ def format_report(result: OptimizationResult) -> str:
     return "\n".join(lines) + "\n"
 
 def print_report(result: OptimizationResult) -> None:
+    """Print a formatted FareWise optimization report."""
     print(format_report(result))

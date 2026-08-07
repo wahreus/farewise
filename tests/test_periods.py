@@ -1,3 +1,5 @@
+"""Tests for travel period construction and date calculations."""
+
 from datetime import date
 
 import pytest
@@ -10,6 +12,7 @@ from src.periods import (DatePeriod,
 
 
 def test_date_period_contains_start_end_and_middle_dates() -> None:
+    """Verify that date period contains start end and middle dates."""
     period = DatePeriod(kind=PeriodKind.SEVEN_DAY,
                         start_date=date(2026, 3, 1),
                         end_date=date(2026, 3, 7))
@@ -21,6 +24,7 @@ def test_date_period_contains_start_end_and_middle_dates() -> None:
 
 
 def test_date_period_day_count_is_inclusive() -> None:
+    """Verify that date period day count is inclusive."""
     period = DatePeriod(kind=PeriodKind.SEVEN_DAY,
                         start_date=date(2026, 3, 1),
                         end_date=date(2026, 3, 7))
@@ -38,6 +42,7 @@ def test_monthly_end_date_handles_calendar_boundaries(
     start_date: date,
     expected: date,
     ) -> None:
+    """Verify that monthly end date handles calendar boundaries."""
     assert monthly_end_date(start_date) == expected
 
 
@@ -50,6 +55,7 @@ def test_build_period_builds_expected_date_range(
     kind: PeriodKind,
     expected_end: date,
     ) -> None:
+    """Verify that build period builds expected date range."""
     period = build_period(date(2026, 3, 1), kind)
     assert period == DatePeriod(kind=kind,
                                 start_date=date(2026, 3, 1),
@@ -57,11 +63,13 @@ def test_build_period_builds_expected_date_range(
 
 
 def test_build_period_rejects_unsupported_kind() -> None:
+    """Verify that build period rejects unsupported kind."""
     with pytest.raises(ValueError, match="Unsupported period kind"):
         build_period(date(2026, 3, 1), "unsupported")  # type: ignore[arg-type]
 
 
 def test_start_dates_returns_inclusive_date_sequence() -> None:
+    """Verify that start dates returns inclusive date sequence."""
     assert start_dates(date(2026, 3, 1), date(2026, 3, 3)) == [
         date(2026, 3, 1),
         date(2026, 3, 2),
@@ -69,4 +77,5 @@ def test_start_dates_returns_inclusive_date_sequence() -> None:
 
 
 def test_start_dates_returns_empty_list_for_reversed_range() -> None:
+    """Verify that start dates returns empty list for reversed range."""
     assert start_dates(date(2026, 3, 2), date(2026, 3, 1)) == []

@@ -96,6 +96,7 @@ class FareWiseAnalysisService:
                  fares_path: Path = FARES_JSON,
                  reference_dir: Path = REFERENCE_DIR,
                  ) -> None:
+        """Configure the fare and station reference paths."""
         self.fares_path = fares_path
         self.reference_dir = reference_dir
 

@@ -1,3 +1,5 @@
+"""Fare data models and loading utilities for FareWise."""
+
 import json
 from dataclasses import dataclass
 from decimal import Decimal
@@ -10,12 +12,14 @@ STATIONS_CSV = DATA_DIR / "reference" / "london_underground_stations.csv"
 
 @dataclass(frozen=True)
 class PayAsYouGoCaps:
+    """PAYG cap values for one fare-zone option."""
     daily_anytime_cap: Decimal
     daily_off_peak_cap: Decimal
     weekly_cap: Decimal
 
 @dataclass(frozen=True)
 class TravelcardPrices:
+    """Travelcard prices for one fare-zone option."""
     one_day_anytime: Decimal
     one_day_off_peak: Decimal
     seven_day: Decimal
@@ -23,19 +27,23 @@ class TravelcardPrices:
 
 @dataclass(frozen=True)
 class UndergroundFareOption:
+    """PAYG and Travelcard fares for one zone range."""
     pay_as_you_go: PayAsYouGoCaps
     travelcard: TravelcardPrices
 
 @dataclass(frozen=True)
 class FareData:
+    """Complete FareWise fare table and metadata."""
     valid_from: str
     currency: str
     underground: dict[str, UndergroundFareOption]
 
 def as_decimal(value: str | int | float | Decimal) -> Decimal:
+    """Convert a supported numeric value to Decimal."""
     return Decimal(str(value))
 
 def load_fare_data(json_path: str | Path) -> FareData:
+    """Load fare data from the configured JSON structure."""
     with open(json_path, encoding="utf-8") as file:
         data = json.load(file)
     underground = {}
@@ -57,9 +65,11 @@ def load_fare_data(json_path: str | Path) -> FareData:
                     underground=underground)
 
 def format_money(value: Decimal) -> str:
+    """Format a Decimal value as pounds and pence."""
     return f"£{value:.2f}"
 
 def main() -> None:
+    """Print the configured fare table for inspection."""
     fare_data = load_fare_data(FARES_JSON)
     print(f"\nFares valid from: {fare_data.valid_from}")
     print(f"Currency: {fare_data.currency}\n")

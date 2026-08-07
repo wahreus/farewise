@@ -1,3 +1,5 @@
+"""Tests for FareWise API health and analysis endpoints."""
+
 from datetime import date
 from pathlib import Path
 
@@ -10,13 +12,17 @@ from src.api.models import (AnalysisResponse,
 
 
 class FakeAnalysisService:
+    """Minimal analysis service used to isolate API endpoint behavior."""
     def __init__(self, ready: bool = True) -> None:
+        """Initialize the fake service with a readiness state."""
         self.ready = ready
 
     def is_ready(self) -> bool:
+        """Return whether the fake analysis service is ready."""
         return self.ready
 
     def analyze_file(self, csv_path: Path) -> AnalysisResponse:
+        """Validate the uploaded file and return a fixed analysis response."""
         assert csv_path.read_text(encoding="utf-8") == "journey data"
         return AnalysisResponse(
             journey_start_date=date(2026, 1, 1),
@@ -41,6 +47,7 @@ class FakeAnalysisService:
 
 
 def test_liveness_returns_alive() -> None:
+    """Verify that liveness returns alive."""
     client = TestClient(create_app(FakeAnalysisService()))
     response = client.get("/health/live")
     assert response.status_code == 200
@@ -48,6 +55,7 @@ def test_liveness_returns_alive() -> None:
 
 
 def test_readiness_returns_503_when_dependencies_are_missing() -> None:
+    """Verify that readiness returns 503 when dependencies are missing."""
     client = TestClient(create_app(FakeAnalysisService(ready=False)))
     response = client.get("/health/ready")
     assert response.status_code == 503
@@ -56,6 +64,7 @@ def test_readiness_returns_503_when_dependencies_are_missing() -> None:
 
 
 def test_create_analysis_returns_structured_result() -> None:
+    """Verify that create analysis returns structured result."""
     client = TestClient(create_app(FakeAnalysisService()))
     response = client.post(
         "/analyses",
@@ -67,6 +76,7 @@ def test_create_analysis_returns_structured_result() -> None:
 
 
 def test_create_analysis_rejects_non_csv_file() -> None:
+    """Verify that create analysis rejects non CSV file."""
     client = TestClient(create_app(FakeAnalysisService()))
     response = client.post(
         "/analyses",

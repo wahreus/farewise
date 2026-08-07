@@ -1,3 +1,5 @@
+"""Station-zone coverage helpers for FareWise journey evaluation."""
+
 import re
 from pathlib import Path
 from src.journeys import Journey
@@ -7,10 +9,12 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 REFERENCE_DIR = PROJECT_ROOT / "data" / "reference"
 
 def station_key(network: str, station_name: str) -> tuple[str, str]:
+    """Return a normalized key for a network and station name."""
     return network.strip().casefold(), station_name.strip().casefold()
 
 def load_station_lookup(reference_dir: str | Path = REFERENCE_DIR,
                         ) -> dict[tuple[str, str], Station]:
+    """Load station data for all supported transport networks."""
     reference_path = Path(reference_dir)
     stations = {}
     for network, filename in NETWORK_FILES.items():
@@ -23,6 +27,7 @@ def station_zones(station_name: str,
                   network: str,
                   stations: dict[tuple[str, str], Station],
                   ) -> set[int] | None:
+    """Return the numeric zones assigned to a station."""
     station = stations.get(station_key(network, station_name))
     if station is None:
         return None
@@ -36,6 +41,7 @@ def station_is_covered(station_name: str,
                        max_zone: int,
                        stations: dict[tuple[str, str], Station],
                        ) -> bool:
+    """Return whether a station falls within the maximum covered zone."""
     zones = station_zones(station_name, network, stations)
     if zones is None:
         return False
@@ -45,6 +51,7 @@ def journey_is_covered(journey: Journey,
                        max_zone: int,
                        stations: dict[tuple[str, str], Station],
                        ) -> bool:
+    """Return whether both journey endpoints are covered."""
     return (station_is_covered(journey.start_station,
                                journey.start_network,
                                max_zone,
@@ -57,6 +64,7 @@ def journey_is_covered(journey: Journey,
 def minimum_journey_max_zone(journey: Journey,
                              stations: dict[tuple[str, str], Station],
                              ) -> int | None:
+    """Return the minimum maximum zone needed to cover a journey."""
     start_zones = station_zones(journey.start_station,
                                 journey.start_network,
                                 stations)
