@@ -185,6 +185,11 @@ resource "aws_apigatewayv2_stage" "default" {
   name        = "$default"
   auto_deploy = true
 
+  default_route_settings {
+    throttling_burst_limit = 2
+    throttling_rate_limit  = 1
+  }
+
   tags = local.common_tags
 }
 
