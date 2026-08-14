@@ -17,3 +17,15 @@ htmlcov/
 # Local journey history exports
 data/raw/*.csv
 data/processed/*.csv
+
+# Environment variables
+.env
+.env.*
+
+# Build artifacts
+build/
+
+# Terraform
+infra/.terraform/
+infra/*.tfstate
+infra/*.tfstate.*
