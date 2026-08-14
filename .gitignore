@@ -1,9 +1,18 @@
+# macOS
 .DS_Store
 
 # Python
 __pycache__/
 *.py[cod]
 *$py.class
+
+# Virtual environments
+.venv/
+
+# Test / tooling caches
+.pytest_cache/
+.coverage
+htmlcov/
 
 # Local journey history exports
 data/raw/*.csv

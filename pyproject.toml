@@ -1,0 +1,21 @@
+[project]
+name = "farewise"
+version = "0.1.0"
+description = "A Transport for London (TfL) fare optimisation tool."
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "fastapi==0.141.1",
+    "pydantic==2.13.4",
+    "python-multipart==0.0.32",
+]
+
+[dependency-groups]
+dev = [
+    "httpx==0.28.1",
+    "pytest==9.1.1",
+    "uvicorn==0.52.3",
+]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
