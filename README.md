@@ -2,11 +2,15 @@
   <img src="farewise_logo.svg" alt="FareWise logo" width="75%">
 </p>
 
-## Turn TfL journey history into future fare savings
+## Turn your TfL journey history into future fare savings
 
-FareWise is a Transport for London fare optimisation tool that analyses historical journey data and compares payment strategies to identify the lowest-cost option. It currently supports London Underground, Overground and DLR journeys only, with support for other TfL modes planned for later.
+FareWise is a Transport for London (TfL) fare optimisation tool that analyses historical journey data and compares payment strategies to identify the lowest-cost option. It currently supports London Underground, Overground and DLR journeys only, with support for other TfL modes planned for later.
 
-To use FareWise, download a TfL journey history CSV from your Oyster or contactless account and pass it to farewise.py:
+To use FareWise, download a TfL journey history CSV from your Oyster or contactless account and upload it through the web interface.
+
+**[Go to the FareWise web interface](https://d341ek8zhcqkhz.cloudfront.net)**
+
+FareWise can also be run locally:
 
 ```bash
 python farewise.py journey_history.csv
