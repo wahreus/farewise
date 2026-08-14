@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta
+        name="description"
+        content="Upload your TfL journey history to compare what you paid with the lowest estimated fare strategy."
+    >
+    <title>FareWise</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <main class="page">
+        <section class="hero">
+            <img
+                class="logo"
+                src="farewise_logo.svg"
+                alt="FareWise"
+            >
+
+            <p class="intro">
+                Turn your TfL journey history into future fare savings
+            </p>
+            <br>
+        </section>
+
+        <section class="upload-panel" aria-labelledby="upload-heading">
+            <h1 id="upload-heading" class="sr-only">Analyse journey history</h1>
+
+            <form id="analysis-form">
+                <label class="upload-box" for="journey-file">
+                    <span class="upload-title">Upload journey history CSV</span>
+                    <span class="upload-action">Choose file</span>
+                    <span id="file-name" class="file-name">No file selected</span>
+
+                    <input
+                        id="journey-file"
+                        name="file"
+                        type="file"
+                        accept=".csv,text/csv"
+                        required
+                    >
+                </label>
+
+                <button id="analyse-button" type="submit" disabled>
+                    Analyse
+                </button>
+            </form>
+
+            <p class="upload-note">CSV only, up to 2 MiB</p>
+
+            <div
+                id="status"
+                class="status"
+                role="status"
+                aria-live="polite"
+                hidden
+            ></div>
+        </section>
+
+        <section id="results" class="results" hidden>
+            <p id="journey-range" class="journey-range"></p>
+
+            <div class="summary">
+                <div>
+                    <span>Recorded PAYG</span>
+                    <strong id="recorded-total"></strong>
+                </div>
+
+                <div>
+                    <span>Lowest estimate</span>
+                    <strong id="optimized-total"></strong>
+                </div>
+
+                <div class="saving">
+                    <span>Estimated saving</span>
+                    <strong id="saving-total"></strong>
+                </div>
+            </div>
+
+            <section class="result-box">
+                <div class="result-heading">
+                    <h2>Recommended strategy</h2>
+                    <span id="strategy-badge"></span>
+                </div>
+                <div id="selections" class="selections"></div>
+            </section>
+
+            <section class="result-box compact">
+                <h2>Journey summary</h2>
+                <dl id="input-summary" class="input-summary"></dl>
+            </section>
+
+            <section
+                id="warnings-panel"
+                class="result-box compact warnings"
+                hidden
+            >
+                <h2>Warnings</h2>
+                <ul id="warnings"></ul>
+            </section>
+        </section>
+    </main>
+
+    <script src="app.js"></script>
+</body>
+</html>
