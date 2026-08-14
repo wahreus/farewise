@@ -1,4 +1,6 @@
-const API_BASE_URL = "http://127.0.0.1:8000";
+const API_BASE_URL = ["localhost", "127.0.0.1"].includes(window.location.hostname)
+                      ? "http://127.0.0.1:8000"
+                      : "";
 const MAX_UPLOAD_BYTES = 2 * 1024 * 1024;
 
 const form = document.querySelector("#analysis-form");
