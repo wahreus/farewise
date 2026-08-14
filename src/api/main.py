@@ -3,6 +3,7 @@
 from pathlib import Path
 from tempfile import NamedTemporaryFile
 from typing import Annotated
+from mangum import Mangum
 
 from fastapi import (FastAPI,
                      File,
@@ -116,3 +117,4 @@ def create_app(service: AnalysisService | None = None) -> FastAPI:
     return application
 
 app = create_app()
+handler = Mangum(app, lifespan="off")

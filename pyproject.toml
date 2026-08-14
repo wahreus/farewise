@@ -5,6 +5,7 @@ description = "A Transport for London (TfL) fare optimisation tool."
 requires-python = ">=3.12,<3.13"
 dependencies = [
     "fastapi==0.141.1",
+    "mangum>=0.21.0",
     "pydantic==2.13.4",
     "python-multipart==0.0.32",
 ]
