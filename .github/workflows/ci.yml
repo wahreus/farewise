@@ -41,6 +41,10 @@ jobs:
         run: terraform init -backend=false
         working-directory: infra
 
+      - name: Build Lambda package
+        run: bash scripts/build_lambda.sh
+
       - name: Validate Terraform
         run: terraform validate
         working-directory: infra
+        
