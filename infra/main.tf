@@ -4,6 +4,14 @@
 
 provider "aws" {
   region = var.aws_region
+
+  default_tags {
+    tags = {
+      Project     = var.project_name
+      ManagedBy   = "Terraform"
+      Application = "FareWise"
+    }
+  }
 }
 
 # ------------------------------------------------------------------------------------------------------------
@@ -12,12 +20,6 @@ provider "aws" {
 
 locals {
   bucket_name = var.bucket_name != "" ? var.bucket_name : "${var.project_name}-frontend-${random_id.bucket_suffix.hex}"
-
-  common_tags = {
-    Project     = var.project_name
-    ManagedBy   = "Terraform"
-    Application = "FareWise"
-  }
 }
 
 # ------------------------------------------------------------------------------------------------------------
@@ -27,8 +29,6 @@ locals {
 resource "aws_s3_bucket" "frontend" {
   bucket        = local.bucket_name
   force_destroy = true
-
-  tags = local.common_tags
 }
 
 resource "random_id" "bucket_suffix" {
@@ -95,8 +95,6 @@ resource "aws_iam_role" "api_lambda" {
   name = "${var.project_name}-api-lambda-role"
 
   assume_role_policy = data.aws_iam_policy_document.api_lambda_assume_role.json
-
-  tags = local.common_tags
 }
 
 data "aws_iam_policy_document" "api_lambda" {
@@ -122,8 +120,6 @@ resource "aws_iam_role_policy" "api_lambda" {
 resource "aws_cloudwatch_log_group" "api_lambda" {
   name              = "/aws/lambda/${var.project_name}-api"
   retention_in_days = 14
-
-  tags = local.common_tags
 }
 
 # ------------------------------------------------------------------------------------------------------------
@@ -145,8 +141,6 @@ resource "aws_lambda_function" "api" {
   memory_size = 1024
   timeout     = 25
 
-  tags = local.common_tags
-
   depends_on = [
     aws_iam_role_policy.api_lambda,
     aws_cloudwatch_log_group.api_lambda
@@ -160,8 +154,6 @@ resource "aws_lambda_function" "api" {
 resource "aws_apigatewayv2_api" "api" {
   name          = "${var.project_name}-api"
   protocol_type = "HTTP"
-
-  tags = local.common_tags
 }
 
 resource "aws_apigatewayv2_integration" "api_lambda" {
@@ -189,8 +181,6 @@ resource "aws_apigatewayv2_stage" "default" {
     throttling_burst_limit = 2
     throttling_rate_limit  = 1
   }
-
-  tags = local.common_tags
 }
 
 resource "aws_lambda_permission" "allow_api_gateway" {
@@ -285,8 +275,6 @@ resource "aws_cloudfront_distribution" "frontend" {
   viewer_certificate {
     cloudfront_default_certificate = true
   }
-
-  tags = local.common_tags
 }
 
 # ------------------------------------------------------------------------------------------------------------
