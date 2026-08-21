@@ -17,3 +17,8 @@ output "cloudfront_distribution_id" {
   description = "CloudFront distribution ID used for cache invalidations"
   value       = aws_cloudfront_distribution.frontend.id
 }
+
+output "github_cd_role_arn" {
+  description = "IAM role assumed by the FareWise GitHub Actions CD workflow"
+  value       = aws_iam_role.github_cd.arn
+}

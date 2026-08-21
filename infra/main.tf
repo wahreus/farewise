@@ -330,3 +330,111 @@ resource "aws_iam_openid_connect_provider" "github" {
     "sts.amazonaws.com"
   ]
 }
+
+# ------------------------------------------------------------------------------------------------------------
+# GitHub Actions CD Role
+# ------------------------------------------------------------------------------------------------------------
+
+data "aws_caller_identity" "current" {}
+
+locals {
+  github_oidc_provider_arn = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:oidc-provider/token.actions.githubusercontent.com"
+
+  github_cd_subject = "repo:wahreus@284278793/farewise@1253475090:environment:production"
+}
+
+data "aws_iam_policy_document" "github_cd_assume_role" {
+  statement {
+    effect  = "Allow"
+    actions = ["sts:AssumeRoleWithWebIdentity"]
+
+    principals {
+      type        = "Federated"
+      identifiers = [local.github_oidc_provider_arn]
+    }
+
+    condition {
+      test     = "StringEquals"
+      variable = "token.actions.githubusercontent.com:aud"
+      values   = ["sts.amazonaws.com"]
+    }
+
+    condition {
+      test     = "StringEquals"
+      variable = "token.actions.githubusercontent.com:sub"
+      values   = [local.github_cd_subject]
+    }
+  }
+}
+
+resource "aws_iam_role" "github_cd" {
+  name               = "${var.project_name}-github-cd"
+  assume_role_policy = data.aws_iam_policy_document.github_cd_assume_role.json
+}
+
+data "aws_iam_policy_document" "github_cd" {
+  statement {
+    sid = "UpdateLambdaCode"
+
+    effect = "Allow"
+
+    actions = [
+      "lambda:UpdateFunctionCode",
+      "lambda:GetFunctionConfiguration"
+    ]
+
+    resources = [
+      aws_lambda_function.api.arn
+    ]
+  }
+
+  statement {
+    sid = "ListFrontendBucket"
+
+    effect = "Allow"
+
+    actions = [
+      "s3:ListBucket",
+      "s3:GetBucketLocation"
+    ]
+
+    resources = [
+      aws_s3_bucket.frontend.arn
+    ]
+  }
+
+  statement {
+    sid = "DeployFrontendObjects"
+
+    effect = "Allow"
+
+    actions = [
+      "s3:PutObject",
+      "s3:DeleteObject"
+    ]
+
+    resources = [
+      "${aws_s3_bucket.frontend.arn}/*"
+    ]
+  }
+
+  statement {
+    sid = "InvalidateCloudFront"
+
+    effect = "Allow"
+
+    actions = [
+      "cloudfront:CreateInvalidation"
+    ]
+
+    resources = [
+      aws_cloudfront_distribution.frontend.arn
+    ]
+  }
+}
+
+resource "aws_iam_role_policy" "github_cd" {
+  name   = "${var.project_name}-github-cd-policy"
+  role   = aws_iam_role.github_cd.id
+  policy = data.aws_iam_policy_document.github_cd.json
+}
