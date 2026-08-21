@@ -137,9 +137,15 @@ resource "aws_lambda_function" "api" {
   source_code_hash = filebase64sha256("${path.module}/../build/lambda.zip")
 
   architectures = ["x86_64"]
+  memory_size   = 1024
+  timeout       = 25
 
-  memory_size = 1024
-  timeout     = 25
+  lifecycle {
+    ignore_changes = [
+      filename,
+      source_code_hash,
+    ]
+  }
 
   depends_on = [
     aws_iam_role_policy.api_lambda,
@@ -310,5 +316,17 @@ resource "aws_s3_bucket_policy" "allow_cloudfront" {
 
   depends_on = [
     aws_s3_bucket_public_access_block.frontend
+  ]
+}
+
+# ------------------------------------------------------------------------------------------------------------
+# GitHub OIDC
+# ------------------------------------------------------------------------------------------------------------
+
+resource "aws_iam_openid_connect_provider" "github" {
+  url = "https://token.actions.githubusercontent.com"
+
+  client_id_list = [
+    "sts.amazonaws.com"
   ]
 }
