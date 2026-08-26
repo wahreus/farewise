@@ -163,9 +163,36 @@ function renderSelections(selections) {
         return;
     }
 
-    selections.forEach((selection) => {
+    const groupedSelections = groupSelections(selections);
+
+    groupedSelections.forEach((selection) => {
         container.append(createSelection(selection));
     });
+}
+
+function groupSelections(selections) {
+    const grouped = [];
+
+    selections.forEach((selection) => {
+        const previous = grouped[grouped.length - 1];
+
+        if (
+            selection.payment_type === "payg" &&
+            previous?.payment_type === "payg"
+        ) {
+            previous.end_date = selection.end_date;
+            previous.total_cost =
+                Number(previous.total_cost) + Number(selection.total_cost);
+            previous.journey_count =
+                Number(previous.journey_count) + Number(selection.journey_count);
+
+            return;
+        }
+
+        grouped.push({ ...selection });
+    });
+
+    return grouped;
 }
 
 function createSelection(selection) {
@@ -216,7 +243,7 @@ function renderInputSummary(summary) {
     }
 
     addSummaryRow(container, "Journeys analysed", summary.loaded_journeys);
-    addSummaryRow(container, "Rows skipped", summary.skipped_rows);
+    addSummaryRow(container, "CSV rows skipped", summary.skipped_rows);
     addSummaryRow(container, "Unsupported modes", summary.unsupported_transport_modes);
     addSummaryRow(container, "Non-journey actions", summary.non_journey_actions);
     addSummaryRow(container, "Unknown stations", summary.unknown_stations);
