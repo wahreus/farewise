@@ -357,6 +357,54 @@ button:disabled {
     display: none !important;
 }
 
+.logo {
+    animation: slide-in-right 900ms cubic-bezier(0.2, 1, 0.3, 1) both;
+}
+
+.intro {
+    animation: slide-in-bottom 900ms cubic-bezier(0.2, 1, 0.3, 1) 150ms both;
+}
+
+.farewise-description{
+    animation: slide-in-bottom 900ms cubic-bezier(0.2, 1, 0.3, 1) 300ms both;
+}
+
+.upload-panel {
+    animation: slide-in-bottom 900ms cubic-bezier(0.2, 1, 0.3, 1) 450ms both;
+}
+
+@keyframes slide-in-right {
+    from {
+        opacity: 0;
+        transform: translateX(80px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes slide-in-bottom {
+    from {
+        opacity: 0;
+        transform: translateY(50px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .logo,
+    .intro,
+    .upload-panel {
+        animation: none;
+    }
+}
+
 @media (max-width: 640px) {
     .page {
         width: min(100% - 20px, 760px);
