@@ -71,6 +71,10 @@ jobs:
             frontend/ \
             "s3://${{ vars.FRONTEND_BUCKET_NAME }}" \
             --delete
+      
+          aws s3 cp \
+            journey_history.csv \
+            "s3://${{ vars.FRONTEND_BUCKET_NAME }}/journey_history.csv"
 
       - name: Invalidate CloudFront cache
         run: |
