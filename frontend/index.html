@@ -32,27 +32,57 @@
         <section class="upload-panel" aria-labelledby="upload-heading">
             <h1 id="upload-heading" class="sr-only">Analyse journey history</h1>
 
-            <form id="analysis-form">
-                <label class="upload-box" for="journey-file">
-                    <span class="upload-title">Upload TfL journey history CSV</span>
-                    <span class="upload-action">Choose file</span>
-                    <span id="file-name" class="file-name">No file selected</span>
-
-                    <input
-                        id="journey-file"
-                        name="file"
-                        type="file"
-                        accept=".csv,text/csv"
-                        required
-                    >
-                </label>
-
-                <button id="analyse-button" type="submit" disabled>
-                    Analyse
+            <div class="action-card demo-card">
+                <button
+                    id="demo-button"
+                    class="demo-button"
+                    type="button"
+                >
+                    Try with sample history
                 </button>
-            </form>
+            </div>
 
-            <p class="upload-note">CSV only, up to 2 MiB</p>
+            <div class="or-divider">
+                <span>or</span>
+            </div>
+
+            <div class="action-card upload-card">
+                <form id="analysis-form">
+                    <label class="upload-box" for="journey-file">
+                        <span class="upload-title">
+                            Upload TfL journey history CSV
+                        </span>
+
+                        <span class="upload-action">
+                            Choose file
+                        </span>
+
+                        <span id="file-name" class="file-name">
+                            No file selected
+                        </span>
+
+                        <input
+                            id="journey-file"
+                            name="file"
+                            type="file"
+                            accept=".csv,text/csv"
+                            required
+                        >
+                    </label>
+
+                    <button
+                        id="analyse-button"
+                        type="submit"
+                        disabled
+                    >
+                        Analyse
+                    </button>
+                </form>
+
+                <p class="upload-note">
+                    CSV only, up to 2 MiB
+                </p>
+            </div>
 
             <div
                 id="status"
