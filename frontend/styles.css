@@ -345,11 +345,6 @@ button:disabled {
     font-weight: 600;
 }
 
-.warnings ul {
-    margin: 0;
-    padding-left: 18px;
-}
-
 .sr-only {
     position: absolute;
     width: 1px;
