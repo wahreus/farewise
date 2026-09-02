@@ -12,7 +12,7 @@
 </head>
 <body>
     <main class="page">
-        <section class="hero">
+        <section id="about" class="hero">
             <img
                 class="logo"
                 src="farewise_logo.svg"
@@ -50,7 +50,7 @@
                 <form id="analysis-form">
                     <label class="upload-box" for="journey-file">
                         <span class="upload-title">
-                            Upload TfL journey history CSV
+                            Upload your own TfL journey history CSV
                         </span>
 
                         <span class="upload-action">
@@ -80,8 +80,28 @@
                 </form>
 
                 <p class="upload-note">
-                    CSV only, up to 2 MiB
+                    CSV only, up to 2 MB
                 </p>
+
+                <div class="upload-help">
+                    <p>
+                        <strong>Need your journey history?</strong>
+                        Sign in to your
+                        <a
+                            href="https://contactless.tfl.gov.uk/"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                        >TfL Contactless and Oyster account</a>,
+                        open your journey history, choose a date range and
+                        download the statement in CSV format.
+                    </p>
+
+                    <p id="privacy" class="privacy-note">
+                        <strong>Privacy:</strong>
+                        Uploaded CSVs are stored only temporarily while the
+                        analysis runs and are deleted immediately afterwards.
+                    </p>
+                </div>
             </div>
 
             <div
@@ -94,6 +114,13 @@
         </section>
 
         <section id="results" class="results" hidden>
+            <div id="sample-banner" class="sample-banner" hidden>
+                <strong>Sample analysis</strong>
+                <span>
+                    These results use the sample journey history included with FareWise.
+                </span>
+            </div>
+
             <p id="journey-range" class="journey-range"></p>
 
             <div class="summary">
@@ -134,6 +161,14 @@
                 <h2>Warnings</h2>
                 <ul id="warnings"></ul>
             </section>
+        </section>
+
+        <section class="site-notes" aria-labelledby="site-notes-heading">
+            <h2 id="site-notes-heading">Coverage and limitations</h2>
+
+            <p>
+            FareWise currently supports London Underground, London Overground and DLR journeys. Results are estimates and may not account for every TfL fare rule or journey scenario. FareWise is an independent project and is not affiliated with or endorsed by Transport for London.
+            </p>
         </section>
     </main>
 

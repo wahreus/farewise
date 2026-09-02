@@ -10,6 +10,7 @@ const analyseButton = document.querySelector("#analyse-button");
 const demoButton = document.querySelector("#demo-button");
 const statusBox = document.querySelector("#status");
 const resultsSection = document.querySelector("#results");
+const sampleBanner = document.querySelector("#sample-banner");
 
 fileInput.addEventListener("change", () => {
     const file = fileInput.files[0];
@@ -51,6 +52,7 @@ form.addEventListener("submit", async (event) => {
 
     setLoading(true);
     resultsSection.hidden = true;
+    sampleBanner.hidden = true;
 
     try {
         const result = await analyseFile(file);
@@ -74,6 +76,7 @@ demoButton.addEventListener("click", async () => {
     demoButton.disabled = true;
     demoButton.textContent = "Analysing sample...";
     resultsSection.hidden = true;
+    sampleBanner.hidden = true;
     clearStatus();
 
     try {
@@ -94,6 +97,7 @@ demoButton.addEventListener("click", async () => {
         const result = await analyseFile(file);
 
         renderResults(result);
+        sampleBanner.hidden = false;
         resultsSection.hidden = false;
         resultsSection.scrollIntoView({ behavior: "smooth", block: "start" });
     } catch (error) {
