@@ -197,7 +197,6 @@ function renderResults(result) {
 
     renderSelections(result.selections || []);
     renderInputSummary(result.input_summary);
-    renderWarnings(result.warnings || []);
 }
 
 function renderSelections(selections) {
@@ -309,25 +308,6 @@ function addSummaryRow(container, label, value) {
 
     row.append(term, description);
     container.append(row);
-}
-
-function renderWarnings(warnings) {
-    const panel = document.querySelector("#warnings-panel");
-    const list = document.querySelector("#warnings");
-    list.replaceChildren();
-
-    if (warnings.length === 0) {
-        panel.hidden = true;
-        return;
-    }
-
-    warnings.forEach((warning) => {
-        const item = document.createElement("li");
-        item.textContent = warning;
-        list.append(item);
-    });
-
-    panel.hidden = false;
 }
 
 function formatCurrency(value) {
