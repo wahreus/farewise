@@ -14,12 +14,56 @@ provider "aws" {
   }
 }
 
+# CloudFront requires its ACM certificate to be in us-east-1.
+provider "aws" {
+  alias  = "us_east_1"
+  region = "us-east-1"
+
+  default_tags {
+    tags = {
+      Project     = var.project_name
+      ManagedBy   = "Terraform"
+      Application = "FareWise"
+    }
+  }
+}
+
 # ------------------------------------------------------------------------------------------------------------
 # Local Values
 # ------------------------------------------------------------------------------------------------------------
 
 locals {
   bucket_name = var.bucket_name != "" ? var.bucket_name : "${var.project_name}-frontend-${random_id.bucket_suffix.hex}"
+}
+
+# ------------------------------------------------------------------------------------------------------------
+# ACM Certificate for CloudFront
+# ------------------------------------------------------------------------------------------------------------
+
+# CloudFront viewer certificates must be created in us-east-1.
+# DNS validation records are added manually in Squarespace DNS.
+resource "aws_acm_certificate" "frontend" {
+  provider = aws.us_east_1
+
+  domain_name = var.domain_name
+
+  subject_alternative_names = [
+    "www.${var.domain_name}"
+  ]
+
+  validation_method = "DNS"
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+# This resource waits until the Squarespace DNS validation records have propagated
+# and ACM has issued the certificate.
+resource "aws_acm_certificate_validation" "frontend" {
+  provider = aws.us_east_1
+
+  certificate_arn = aws_acm_certificate.frontend.arn
 }
 
 # ------------------------------------------------------------------------------------------------------------
@@ -222,6 +266,11 @@ resource "aws_cloudfront_distribution" "frontend" {
   default_root_object = "index.html"
   price_class         = var.price_class
 
+  aliases = [
+    var.domain_name,
+    "www.${var.domain_name}"
+  ]
+
   origin {
     domain_name              = aws_s3_bucket.frontend.bucket_regional_domain_name
     origin_id                = "s3-${aws_s3_bucket.frontend.id}"
@@ -279,7 +328,9 @@ resource "aws_cloudfront_distribution" "frontend" {
   }
 
   viewer_certificate {
-    cloudfront_default_certificate = true
+    acm_certificate_arn      = aws_acm_certificate_validation.frontend.certificate_arn
+    ssl_support_method       = "sni-only"
+    minimum_protocol_version = "TLSv1.2_2021"
   }
 }
 

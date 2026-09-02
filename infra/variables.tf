@@ -17,3 +17,8 @@ variable "price_class" {
   type    = string
   default = "PriceClass_100"
 }
+
+variable "domain_name" {
+  type    = string
+  default = "farewise.uk"
+}
