@@ -7,6 +7,7 @@ const form = document.querySelector("#analysis-form");
 const fileInput = document.querySelector("#journey-file");
 const fileName = document.querySelector("#file-name");
 const analyseButton = document.querySelector("#analyse-button");
+const demoButton = document.querySelector("#demo-button");
 const statusBox = document.querySelector("#status");
 const resultsSection = document.querySelector("#results");
 
@@ -51,22 +52,10 @@ form.addEventListener("submit", async (event) => {
     setLoading(true);
     resultsSection.hidden = true;
 
-    const body = new FormData();
-    body.append("file", file);
-
     try {
-        const response = await fetch(`${API_BASE_URL}/analyses`, {
-            method: "POST",
-            body,
-        });
+        const result = await analyseFile(file);
 
-        const payload = await readResponse(response);
-
-        if (!response.ok) {
-            throw new Error(getErrorMessage(payload, response.status));
-        }
-
-        renderResults(payload);
+        renderResults(result);
         clearStatus();
         resultsSection.hidden = false;
         resultsSection.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -80,6 +69,62 @@ form.addEventListener("submit", async (event) => {
         setLoading(false);
     }
 });
+
+demoButton.addEventListener("click", async () => {
+    demoButton.disabled = true;
+    demoButton.textContent = "Analysing sample...";
+    resultsSection.hidden = true;
+    clearStatus();
+
+    try {
+        const response = await fetch("/journey_history.csv");
+
+        if (!response.ok) {
+            throw new Error("FareWise could not load the sample journey history.");
+        }
+
+        const blob = await response.blob();
+
+        const file = new File(
+            [blob],
+            "journey_history.csv",
+            { type: "text/csv" },
+        );
+
+        const result = await analyseFile(file);
+
+        renderResults(result);
+        resultsSection.hidden = false;
+        resultsSection.scrollIntoView({ behavior: "smooth", block: "start" });
+    } catch (error) {
+        const message = error instanceof TypeError
+            ? "FareWise could not reach the API."
+            : error.message;
+
+        showStatus(message, "error");
+    } finally {
+        demoButton.disabled = false;
+        demoButton.textContent = "Try with sample history";
+    }
+});
+
+async function analyseFile(file) {
+    const body = new FormData();
+    body.append("file", file);
+
+    const response = await fetch(`${API_BASE_URL}/analyses`, {
+        method: "POST",
+        body,
+    });
+
+    const payload = await readResponse(response);
+
+    if (!response.ok) {
+        throw new Error(getErrorMessage(payload, response.status));
+    }
+
+    return payload;
+}
 
 function validateFile(file) {
     if (!file.name.toLowerCase().endsWith(".csv")) {

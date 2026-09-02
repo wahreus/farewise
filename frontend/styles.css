@@ -77,12 +77,20 @@ input {
 }
 
 .upload-panel {
-    margin-top: 0px;
-    padding: 20px;
+    margin-top: 0;
+}
+
+.action-card {
+    padding: 24px;
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: 22px;
     box-shadow: var(--shadow);
+}
+
+.demo-card {
+    display: flex;
+    justify-content: center;
 }
 
 #analysis-form {
@@ -416,7 +424,7 @@ button:disabled {
         font-size: 1rem;
     }
 
-    .upload-panel {
+    .action-card {
         padding: 16px;
         border-radius: 18px;
     }
@@ -434,4 +442,23 @@ button:disabled {
         border-top: 1px solid var(--border);
         border-left: 0;
     }
+}
+
+
+.demo-button {
+    width: 100%;
+    padding: 14px 20px;
+    cursor: pointer;
+}
+
+.or-divider {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 20px 0;
+    text-align: center;
+}
+
+.or-divider span {
+    font-weight: 600;
 }
