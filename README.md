@@ -8,7 +8,7 @@ FareWise is a Transport for London (TfL) fare optimisation tool that analyses hi
 
 To use FareWise, download a TfL journey history CSV from your Oyster or contactless account and upload it through the web interface.
 
-**[Go to the FareWise web interface](https://d341ek8zhcqkhz.cloudfront.net)**
+**[Go to the FareWise web interface](https://farewise.uk/)**
 
 FareWise can also be run locally:
 
