@@ -2,7 +2,7 @@
   <img src="farewise_logo.svg" alt="FareWise logo" width="75%">
 </p>
 
-## Turn your TfL journey history into future fare savings
+## Turn your TfL history into future fare savings
 
 FareWise is a Transport for London (TfL) fare optimisation tool that analyses historical journey data and compares payment strategies to identify the lowest-cost option. It currently supports London Underground, Overground, DLR and bus journeys, with support for other TfL modes planned for later.
 
