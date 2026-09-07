@@ -4,7 +4,7 @@
 
 ## Turn your TfL journey history into future fare savings
 
-FareWise is a Transport for London (TfL) fare optimisation tool that analyses historical journey data and compares payment strategies to identify the lowest-cost option. It currently supports London Underground, Overground and DLR journeys only, with support for other TfL modes planned for later.
+FareWise is a Transport for London (TfL) fare optimisation tool that analyses historical journey data and compares payment strategies to identify the lowest-cost option. It currently supports London Underground, Overground, DLR and bus journeys, with support for other TfL modes planned for later.
 
 To use FareWise, download a TfL journey history CSV from your Oyster or contactless account and upload it through the web interface.
 
