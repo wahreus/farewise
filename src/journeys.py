@@ -17,6 +17,10 @@ UNSUPPORTED_TRANSPORT_MODE = "unsupported_transport_mode"
 NON_JOURNEY_ACTION = "non_journey_action"
 UNKNOWN_STATION = "unknown_station"
 INVALID_CHARGE = "invalid_charge"
+RAIL_MODE = "rail"
+BUS_MODE = "bus"
+BUS_ACTION_PATTERN = re.compile(r"^Bus journey,\s*route\s+(.+)$",
+                                flags=re.IGNORECASE)
 
 class JourneyParseError(ValueError):
     """Raised when journey data cannot be parsed or validated."""
@@ -33,10 +37,13 @@ class Journey:
     start_network: str
     end_network: str
     charged_amount: Decimal
+    mode: str = RAIL_MODE
+    route: str | None = None
     @property
     def starts_at(self) -> datetime:
         """Return the journey start date and time as one datetime."""
         return datetime.combine(self.date, self.start_time)
+
 
 @dataclass(frozen=True)
 class JourneyLoadSummary:
@@ -46,7 +53,6 @@ class JourneyLoadSummary:
     non_journey_actions: int
     unknown_stations: int
     invalid_charges: int
-
     @property
     def skipped_count(self) -> int:
         """Return the total number of skipped CSV rows."""
@@ -85,13 +91,23 @@ def read_station_names(path: Path) -> dict[str, str]:
     return stations
 
 def read_reference_data(reference_dir: Path) -> dict[str, dict[str, str]]:
-    """Load station names for all supported transport networks."""
+    """Load station names for all supported rail transport networks."""
     return {network: read_station_names(reference_dir / filename)
             for network, filename in NETWORK_FILES.items()}
 
+def parse_bus_action(action: str) -> str | None:
+    """Return the bus route from a TfL bus journey action."""
+    match = BUS_ACTION_PATTERN.fullmatch(clean_text(action))
+    if match is None:
+        return None
+    route = clean_text(match.group(1))
+    return route or None
+
 def split_action(action: str) -> tuple[str, str] | None:
-    """Split a journey action into start and end endpoints."""
-    parts = re.split(r"\s+to\s+", clean_text(action), maxsplit=1,
+    """Split a rail journey action into start and end endpoints."""
+    parts = re.split(r"\s+to\s+",
+                     clean_text(action),
+                     maxsplit=1,
                      flags=re.IGNORECASE)
     if len(parts) != 2:
         return None
@@ -118,10 +134,9 @@ def remove_marker(endpoint: str) -> tuple[str, str] | None:
         return text[:-4].strip(), "dlr"
     return text, "underground"
 
-def parse_endpoint_with_reason(
-        endpoint: str,
-        stations: dict[str, dict[str, str]],
-        ) -> tuple[tuple[str, str] | None, str | None]:
+def parse_endpoint_with_reason(endpoint: str,
+                               stations: dict[str, dict[str, str]],
+                               ) -> tuple[tuple[str, str] | None, str | None]:
     """Resolve an endpoint and report why unsupported data fails."""
     parsed = remove_marker(endpoint)
     if parsed is None:
@@ -154,12 +169,27 @@ def clean_charge(value: object) -> str | None:
     except ValueError:
         return None
 
-def clean_row_with_reason(
-        row: dict[str, str],
-        stations: dict[str, dict[str, str]],
-        ) -> tuple[dict[str, str] | None, str | None]:
+def clean_row_with_reason(row: dict[str, str],
+                          stations: dict[str, dict[str, str]],
+                          ) -> tuple[dict[str, str] | None, str | None]:
     """Normalize a raw TfL row and classify rejected rows."""
     action_text = row.get("Journey/Action", "")
+    bus_route = parse_bus_action(action_text)
+    if bus_route is not None:
+        charge = clean_charge(row.get("Charge", ""))
+        if charge is None:
+            return None, INVALID_CHARGE
+        return (
+            {
+                "date": clean_text(row.get("Date", "")),
+                "start_time": clean_text(row.get("Start Time", "")),
+                "end_time": clean_text(row.get("End Time", "")),
+                "charged_amount": charge,
+                "mode": BUS_MODE,
+                "route": bus_route,
+            },
+            None,
+        )
     action = split_action(action_text)
     if action is None:
         if "journey" in key(action_text):
@@ -179,19 +209,25 @@ def clean_row_with_reason(
         return None, UNKNOWN_STATION
     start_station, start_network = start
     end_station, end_network = end
-    return ({"date": clean_text(row.get("Date", "")),
-             "start_time": clean_text(row.get("Start Time", "")),
-             "end_time": clean_text(row.get("End Time", "")),
-             "start_station": start_station,
-             "end_station": end_station,
-             "start_network": start_network,
-             "end_network": end_network,
-             "charged_amount": charge},
-            None)
+    return (
+        {
+            "date": clean_text(row.get("Date", "")),
+            "start_time": clean_text(row.get("Start Time", "")),
+            "end_time": clean_text(row.get("End Time", "")),
+            "start_station": start_station,
+            "end_station": end_station,
+            "start_network": start_network,
+            "end_network": end_network,
+            "charged_amount": charge,
+        },
+        None,
+    )
 
-def clean_row(row: dict[str, str],
-              stations: dict[str, dict[str, str]],
-              ) -> dict[str, str] | None:
+
+def clean_row(
+    row: dict[str, str],
+    stations: dict[str, dict[str, str]],
+) -> dict[str, str] | None:
     """Normalize a raw TfL journey row when supported."""
     cleaned, _ = clean_row_with_reason(row, stations)
     return cleaned
@@ -228,21 +264,36 @@ def parse_amount(value: str) -> Decimal:
     try:
         return Decimal(text)
     except InvalidOperation as error:
-        raise JourneyParseError(f"Unsupported journey charge: {value!r}") from error
+        raise JourneyParseError(
+            f"Unsupported journey charge: {value!r}"
+        ) from error
+
 
 def journey_from_row(row: dict[str, str],
                      row_number: int | None = None,
                      ) -> Journey:
     """Build a validated Journey from a normalized row."""
     try:
-        start_station = row["start_station"].strip()
-        end_station = row["end_station"].strip()
-        start_network = row["start_network"].strip().casefold()
-        end_network = row["end_network"].strip().casefold()
-        if not start_station or not end_station:
-            raise JourneyParseError("Station names cannot be empty")
-        if not start_network or not end_network:
-            raise JourneyParseError("Network names cannot be empty")
+        mode = clean_text(row.get("mode", RAIL_MODE)).casefold() or RAIL_MODE
+        route = clean_text(row.get("route", "")) or None
+        if mode not in {RAIL_MODE, BUS_MODE}:
+            raise JourneyParseError(f"Unsupported journey mode: {mode!r}")
+        if mode == BUS_MODE:
+            if route is None:
+                raise JourneyParseError("Bus route cannot be empty")
+            start_station = ""
+            end_station = ""
+            start_network = ""
+            end_network = ""
+        else:
+            start_station = row["start_station"].strip()
+            end_station = row["end_station"].strip()
+            start_network = row["start_network"].strip().casefold()
+            end_network = row["end_network"].strip().casefold()
+            if not start_station or not end_station:
+                raise JourneyParseError("Station names cannot be empty")
+            if not start_network or not end_network:
+                raise JourneyParseError("Network names cannot be empty")
         return Journey(
             date=parse_date(row["date"]),
             start_time=parse_time(row["start_time"]),
@@ -251,22 +302,28 @@ def journey_from_row(row: dict[str, str],
             end_station=end_station,
             start_network=start_network,
             end_network=end_network,
-            charged_amount=parse_amount(row["charged_amount"]))
+            charged_amount=parse_amount(row["charged_amount"]),
+            mode=mode,
+            route=route,
+        )
     except (KeyError, JourneyParseError) as error:
-        location = f" at CSV row {row_number}" if row_number is not None else ""
+        location = (
+            f" at CSV row {row_number}" if row_number is not None else ""
+        )
         raise JourneyParseError(f"Invalid journey{location}: {error}") from error
 
-def load_raw_journeys_with_summary(
-        reader: csv.DictReader,
-        reference_dir: str | Path,
-        ) -> tuple[list[Journey], JourneyLoadSummary]:
+def load_raw_journeys_with_summary(reader: csv.DictReader,
+                                   reference_dir: str | Path,
+                                   ) -> tuple[list[Journey], JourneyLoadSummary]:
     """Load supported raw rows and count skipped row categories."""
     stations = read_reference_data(Path(reference_dir))
     journeys = []
-    skipped = {UNSUPPORTED_TRANSPORT_MODE: 0,
-               NON_JOURNEY_ACTION: 0,
-               UNKNOWN_STATION: 0,
-               INVALID_CHARGE: 0}
+    skipped = {
+        UNSUPPORTED_TRANSPORT_MODE: 0,
+        NON_JOURNEY_ACTION: 0,
+        UNKNOWN_STATION: 0,
+        INVALID_CHARGE: 0,
+    }
     for row_number, row in enumerate(reader, start=2):
         cleaned, reason = clean_row_with_reason(row, stations)
         if cleaned is None:
@@ -279,7 +336,8 @@ def load_raw_journeys_with_summary(
         unsupported_transport_modes=skipped[UNSUPPORTED_TRANSPORT_MODE],
         non_journey_actions=skipped[NON_JOURNEY_ACTION],
         unknown_stations=skipped[UNKNOWN_STATION],
-        invalid_charges=skipped[INVALID_CHARGE])
+        invalid_charges=skipped[INVALID_CHARGE],
+    )
     return journeys, summary
 
 def load_raw_journeys(reader: csv.DictReader,
@@ -289,17 +347,17 @@ def load_raw_journeys(reader: csv.DictReader,
     journeys, _ = load_raw_journeys_with_summary(reader, reference_dir)
     return journeys
 
-def load_journeys_with_summary(
-        csv_path: str | Path,
-        reference_dir: str | Path = REFERENCE_DIR,
-        ) -> tuple[list[Journey], JourneyLoadSummary]:
+def load_journeys_with_summary(csv_path: str | Path,
+                               reference_dir: str | Path = REFERENCE_DIR,
+                               ) -> tuple[list[Journey], JourneyLoadSummary]:
     """Load, validate and sort journeys with a loading summary."""
     with Path(csv_path).open(newline="", encoding="utf-8-sig") as file:
         reader = csv.DictReader(file)
         fields = set(reader.fieldnames or [])
         if not RAW_FIELDS.issubset(fields):
             raise JourneyParseError("CSV does not match the raw TfL format")
-        journeys, summary = load_raw_journeys_with_summary(reader, reference_dir)
+        journeys, summary = load_raw_journeys_with_summary(reader,
+                                                           reference_dir)
     if not journeys:
         raise JourneyParseError("No supported journeys were found in the CSV")
     return (sorted(journeys, key=lambda journey: journey.starts_at),

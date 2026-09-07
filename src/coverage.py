@@ -1,8 +1,8 @@
-"""Station-zone coverage helpers for FareWise journey evaluation."""
+"""Travelcard coverage helpers for FareWise journey evaluation."""
 
 import re
 from pathlib import Path
-from src.journeys import Journey
+from src.journeys import BUS_MODE, Journey
 from src.stations import NETWORK_FILES, Station, load_station_data
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -14,7 +14,7 @@ def station_key(network: str, station_name: str) -> tuple[str, str]:
 
 def load_station_lookup(reference_dir: str | Path = REFERENCE_DIR,
                         ) -> dict[tuple[str, str], Station]:
-    """Load station data for all supported transport networks."""
+    """Load station data for all supported rail transport networks."""
     reference_path = Path(reference_dir)
     stations = {}
     for network, filename in NETWORK_FILES.items():
@@ -51,20 +51,30 @@ def journey_is_covered(journey: Journey,
                        max_zone: int,
                        stations: dict[tuple[str, str], Station],
                        ) -> bool:
-    """Return whether both journey endpoints are covered."""
-    return (station_is_covered(journey.start_station,
-                               journey.start_network,
-                               max_zone,
-                               stations)
-            and station_is_covered(journey.end_station,
-                                   journey.end_network,
-                                   max_zone,
-                                   stations))
+    """Return whether a journey is covered by the Travelcard zone range."""
+    if journey.mode == BUS_MODE:
+        return True
+    return (
+        station_is_covered(
+            journey.start_station,
+            journey.start_network,
+            max_zone,
+            stations,
+        )
+        and station_is_covered(
+            journey.end_station,
+            journey.end_network,
+            max_zone,
+            stations,
+        )
+    )
 
 def minimum_journey_max_zone(journey: Journey,
                              stations: dict[tuple[str, str], Station],
                              ) -> int | None:
     """Return the minimum maximum zone needed to cover a journey."""
+    if journey.mode == BUS_MODE:
+        return 1
     start_zones = station_zones(journey.start_station,
                                 journey.start_network,
                                 stations)
