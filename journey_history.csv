@@ -1,6 +1,8 @@
-Date,Start Time,End Time,Journey/Action,Charge,Credit,Balance,Note
+﻿Date,Start Time,End Time,Journey/Action,Charge,Credit,Balance,Note
 07-Aug-2026,17:50,18:15,Stratford [London Overground] to Limehouse DLR,2.30,,,
 07-Aug-2026,09:50,10:15,Limehouse DLR to Stratford [London Overground],2.20,,,
+06-Aug-2026,18:48,,"Bus journey, route 115",0.00,,,
+06-Aug-2026,18:22,,"Bus journey, route 15",1.75,,,
 05-Aug-2026,17:42,18:06,Tottenham Court Road to Limehouse DLR,3.60,,,
 05-Aug-2026,08:04,08:28,Limehouse DLR to Tottenham Court Road,3.60,,,
 03-Aug-2026,21:15,21:27,Canary Wharf DLR to Limehouse DLR,2.20,,,
@@ -12,6 +14,8 @@ Date,Start Time,End Time,Journey/Action,Charge,Credit,Balance,Note
 31-Jul-2026,17:15,17:50,Forest Hill [London Overground] to Bank,3.30,,,
 31-Jul-2026,12:29,13:04,Tottenham Court Road to Forest Hill [London Overground],3.30,,,
 31-Jul-2026,08:17,08:41,Limehouse DLR to Tottenham Court Road,3.60,,,
+30-Jul-2026,21:37,,"Bus journey, route 135",0.00,,,
+30-Jul-2026,21:04,,"Bus journey, route D3",1.75,,,
 30-Jul-2026,20:21,20:41,Bank DLR to Limehouse DLR,0.30,,,Fare capped after reaching the applicable daily or weekly charging limit
 30-Jul-2026,17:06,17:41,Acton Town to Bank,3.30,,,
 30-Jul-2026,12:12,12:47,Tottenham Court Road to Acton Town,3.30,,,
@@ -38,6 +42,8 @@ Date,Start Time,End Time,Journey/Action,Charge,Credit,Balance,Note
 25-Jul-2026,20:23,20:47,Tottenham Court Road to Limehouse DLR,3.10,,,
 25-Jul-2026,18:18,18:58,Stratford to Tottenham Court Road,3.30,,,
 25-Jul-2026,11:06,11:46,Limehouse DLR to Stratford,2.30,,,
+24-Jul-2026,18:42,,"Bus journey, route 25",1.75,,,
+24-Jul-2026,13:18,,"Bus journey, route 205",1.75,,,
 23-Jul-2026,18:20,18:45,Stratford [London Overground] to Limehouse DLR,2.30,,,
 23-Jul-2026,10:15,10:40,Limehouse DLR to Stratford [London Overground],2.20,,,
 21-Jul-2026,17:33,17:57,Tottenham Court Road to Limehouse DLR,3.60,,,
@@ -46,6 +52,8 @@ Date,Start Time,End Time,Journey/Action,Charge,Credit,Balance,Note
 18-Jul-2026,18:30,18:42,Limehouse DLR to Canary Wharf DLR,2.20,,,
 16-Jul-2026,17:10,17:34,Tottenham Court Road to Limehouse DLR,3.60,,,
 16-Jul-2026,08:12,08:36,Limehouse DLR to Tottenham Court Road,3.60,,,
+15-Jul-2026,17:56,,"Bus journey, route 15",1.75,,,
+15-Jul-2026,09:12,,"Bus journey, route 115",1.75,,,
 14-Jul-2026,20:32,20:56,Tottenham Court Road to Limehouse DLR,2.00,,,Fare capped after reaching the applicable daily or weekly charging limit
 14-Jul-2026,17:21,18:06,Richmond [London Overground] to Tottenham Court Road,3.60,,,
 14-Jul-2026,12:31,13:16,Oxford Circus to Richmond [London Overground],3.60,,,
@@ -76,7 +84,9 @@ Date,Start Time,End Time,Journey/Action,Charge,Credit,Balance,Note
 09-Jul-2026,08:07,08:31,Limehouse DLR to Oxford Circus,3.60,,,
 08-Jul-2026,20:48,21:12,Tottenham Court Road to Limehouse DLR,2.00,,,Fare capped after reaching the applicable daily or weekly charging limit
 08-Jul-2026,17:21,18:06,Woolwich Arsenal DLR to Tottenham Court Road,3.60,,,
+08-Jul-2026,12:41,,"Bus journey, route 25",0.00,,,
 08-Jul-2026,12:23,13:08,Oxford Circus to Woolwich Arsenal DLR,3.60,,,
+08-Jul-2026,12:06,,"Bus journey, route 8",1.75,,,
 08-Jul-2026,08:08,08:32,Limehouse DLR to Oxford Circus,3.60,,,
 05-Jul-2026,20:30,20:54,Tottenham Court Road to Limehouse DLR,3.10,,,
 05-Jul-2026,18:15,18:55,Greenwich DLR to Tottenham Court Road,3.10,,,
@@ -85,6 +95,8 @@ Date,Start Time,End Time,Journey/Action,Charge,Credit,Balance,Note
 03-Jul-2026,08:00,08:24,Limehouse DLR to Oxford Circus,3.60,,,
 01-Jul-2026,21:15,21:27,Canary Wharf DLR to Limehouse DLR,2.20,,,
 01-Jul-2026,18:30,18:42,Limehouse DLR to Canary Wharf DLR,2.30,,,
+29-Jun-2026,19:08,,"Bus journey, route 277",1.75,,,
+29-Jun-2026,08:34,,"Bus journey, route D3",1.75,,,
 28-Jun-2026,20:11,20:31,Shoreditch High Street [London Overground] to Limehouse DLR,3.10,,,
 28-Jun-2026,18:19,19:04,West Croydon [London Overground] to Shoreditch High Street [London Overground],3.80,,,
 28-Jun-2026,11:01,11:41,Limehouse DLR to West Croydon [London Overground],2.50,,,
@@ -101,6 +113,8 @@ Date,Start Time,End Time,Journey/Action,Charge,Credit,Balance,Note
 22-Jun-2026,17:18,17:38,Bank DLR to Limehouse DLR,2.30,,,Fare capped after reaching the applicable daily or weekly charging limit
 22-Jun-2026,12:41,12:51,Oxford Circus to Bank,3.00,,,
 22-Jun-2026,08:04,08:28,Limehouse DLR to Oxford Circus,3.60,,,
+21-Jun-2026,14:46,,"Bus journey, route 339",0.00,,,
+21-Jun-2026,14:17,,"Bus journey, route 309",1.75,,,
 20-Jun-2026,18:45,19:15,Brixton to Limehouse DLR,0.00,,,Fare capped after reaching the applicable daily or weekly charging limit
 20-Jun-2026,14:20,14:35,Bank to Brixton,0.00,,,Fare capped after reaching the applicable daily or weekly charging limit
 20-Jun-2026,11:10,11:30,Limehouse DLR to Bank,0.20,,,Fare capped after reaching the applicable daily or weekly charging limit
@@ -126,8 +140,10 @@ Date,Start Time,End Time,Journey/Action,Charge,Credit,Balance,Note
 14-Jun-2026,20:11,20:35,Tottenham Court Road to Limehouse DLR,3.10,,,
 14-Jun-2026,18:23,19:03,Woolwich Arsenal DLR to Tottenham Court Road,3.60,,,
 14-Jun-2026,11:03,11:43,Limehouse DLR to Woolwich Arsenal DLR,2.40,,,
+12-Jun-2026,17:39,,"Bus journey, route 115",1.75,,,
 12-Jun-2026,17:13,17:33,Bank DLR to Limehouse DLR,2.30,,,Fare capped after reaching the applicable daily or weekly charging limit
 12-Jun-2026,12:13,12:23,Oxford Circus to Bank,3.00,,,
+12-Jun-2026,10:11,,"Bus journey, route 135",1.75,,,
 12-Jun-2026,08:16,08:40,Limehouse DLR to Oxford Circus,3.60,,,
 11-Jun-2026,22:10,22:28,Canada Water to Limehouse DLR,0.00,,,Fare capped after reaching the applicable daily or weekly charging limit
 11-Jun-2026,20:05,20:23,Limehouse DLR to Canada Water,0.00,,,Fare capped after reaching the applicable daily or weekly charging limit
@@ -157,6 +173,8 @@ Date,Start Time,End Time,Journey/Action,Charge,Credit,Balance,Note
 04-Jun-2026,12:29,12:39,Tottenham Court Road to Bank,3.00,,,
 04-Jun-2026,08:09,08:33,Limehouse DLR to Tottenham Court Road,3.60,,,
 03-Jun-2026,17:16,17:36,Bank DLR to Limehouse DLR,2.30,,,Fare capped after reaching the applicable daily or weekly charging limit
+03-Jun-2026,16:53,,"Bus journey, route D3",0.00,,,
+03-Jun-2026,16:25,,"Bus journey, route 15",1.75,,,
 03-Jun-2026,12:15,12:25,Oxford Circus to Bank,3.00,,,
 03-Jun-2026,08:15,08:39,Limehouse DLR to Oxford Circus,3.60,,,
 02-Jun-2026,22:10,22:28,Canada Water to Limehouse DLR,0.00,,,Fare capped after reaching the applicable daily or weekly charging limit
@@ -195,6 +213,8 @@ Date,Start Time,End Time,Journey/Action,Charge,Credit,Balance,Note
 23-May-2026,20:18,20:38,Shoreditch High Street [London Overground] to Limehouse DLR,3.10,,,
 23-May-2026,18:24,19:09,Richmond [London Overground] to Shoreditch High Street [London Overground],3.60,,,
 23-May-2026,11:00,11:40,Limehouse DLR to Richmond [London Overground],2.40,,,
+22-May-2026,19:14,,"Bus journey, route 25",1.75,,,
+22-May-2026,11:32,,"Bus journey, route 205",1.75,,,
 19-May-2026,17:33,17:57,Tottenham Court Road to Limehouse DLR,3.60,,,
 19-May-2026,08:19,08:43,Limehouse DLR to Tottenham Court Road,3.60,,,
 16-May-2026,20:09,20:33,Tottenham Court Road to Limehouse DLR,3.10,,,
