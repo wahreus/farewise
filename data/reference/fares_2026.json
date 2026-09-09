@@ -80,5 +80,12 @@
         "monthly": "313.40"
       }
     }
+  },
+  "bus_and_tram": {
+    "pass": {
+      "one_day": "6.00",
+      "seven_day": "24.70",
+      "monthly": "94.90"
+    }
   }
 }
