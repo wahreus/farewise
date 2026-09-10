@@ -18,21 +18,24 @@ python farewise.py journey_history.csv
 
 ## How the comparison works
 
-FareWise compares PAYG (Pay as you go) with Travelcard-based options using TfL’s published fare information from the [TfL fares page](https://tfl.gov.uk/fares/new-fares).
+FareWise compares PAYG (Pay as you go), Travelcards, and Bus & Tram Passes using TfL’s published fare information from the [TfL fares page](https://tfl.gov.uk/fares/new-fares).
 
-FareWise compares:
+FareWise compares strategies including:
 
 ```text
 PAYG only
-Zone  1   Travelcard + PAYG outside Zone  1
+
+Zone 1    Travelcard + PAYG outside Zone 1
 Zones 1–2 Travelcard + PAYG outside Zones 1–2
 Zones 1–3 Travelcard + PAYG outside Zones 1–3
 Zones 1–4 Travelcard + PAYG outside Zones 1–4
 Zones 1–5 Travelcard + PAYG outside Zones 1–5
 Zones 1–6 Travelcard
+Bus & Tram Pass + PAYG for rail journeys
+Bus & Tram Pass + Travelcard + PAYG outside the Travelcard zones
 ```
 
-For each zone range, it tests non-annual Travelcard durations:
+For each zone range, FareWise tests non-annual Travelcard durations:
 
 ```text
 1 Day Anytime
@@ -41,6 +44,8 @@ For each zone range, it tests non-annual Travelcard durations:
 Monthly
 ```
 
-Date-based payment options are then tested across the journey history. For example, a 7 Day Travelcard could start on different days, so FareWise checks each possible 7-day window and calculates the total cost.
+Date-based payment options are tested across the journey history. For example, a 7 Day Travelcard or 7 Day Bus & Tram Pass could start on different days, so FareWise checks the possible validity periods and calculates the resulting total journey cost.
 
-Finally, FareWise selects the lowest-cost result and reports which option would have been cheapest.
+When passes are combined, FareWise applies each pass only to the journeys it covers. Bus and tram journeys can be covered by a Bus & Tram Pass, journeys within the selected Travelcard zones can be covered by the Travelcard, and any remaining journeys are charged using PAYG.
+
+FareWise compares all tested strategies and reports the cheapest estimated option.
