@@ -190,13 +190,39 @@ function renderResults(result) {
         formatCurrency(result.estimated_saving);
 
     document.querySelector("#journey-range").textContent =
-        `${formatDate(result.journey_start_date)} – ${formatDate(result.journey_end_date)}`;
+        `${formatDate(result.journey_start_date)} - ${formatDate(result.journey_end_date)}`;
 
     document.querySelector("#strategy-badge").textContent =
-        result.uses_travelcard ? "Travelcard + PAYG" : "PAYG only";
+        strategyLabel(result);
 
     renderSelections(result.selections || []);
     renderInputSummary(result.input_summary);
+}
+
+function strategyLabel(result) {
+    const selections = result.selections || [];
+    const hasTravelcard = Boolean(result.uses_travelcard);
+    const hasBusTramPass = Boolean(result.uses_bus_tram_pass);
+    const hasPayg = selections.some(
+        (selection) => selection.payment_type === "payg"
+    );
+
+    if (!hasTravelcard && !hasBusTramPass) {
+        return "PAYG only";
+    }
+
+    const parts = [];
+    if (hasTravelcard) {
+        parts.push("Travelcard");
+    }
+    if (hasBusTramPass) {
+        parts.push("Bus & Tram Pass");
+    }
+    if (hasPayg) {
+        parts.push("PAYG");
+    }
+
+    return parts.join(" + ");
 }
 
 function renderSelections(selections) {
@@ -259,16 +285,29 @@ function createSelection(selection) {
     detail.className = "selection-detail";
 
     meta.textContent =
-        `${formatDate(selection.start_date)} – ${formatDate(selection.end_date)}`;
+        `${formatDate(selection.start_date)} - ${formatDate(selection.end_date)}`;
     cost.textContent = formatCurrency(selection.total_cost);
 
     if (selection.payment_type === "travelcard") {
         title.textContent = `${selection.product_name}, ${selection.zone_name}`;
-        detail.textContent = [
+
+        const details = [
             `Travelcard ${formatCurrency(selection.card_cost)}`,
-            `PAYG outside coverage ${formatCurrency(selection.outside_payg_cost)}`,
             `${selection.covered_journey_count} covered journeys`,
-            `${selection.uncovered_journey_count} uncovered journeys`,
+        ];
+
+        if (Number(selection.outside_payg_cost) > 0) {
+            details.push(
+                `PAYG outside coverage ${formatCurrency(selection.outside_payg_cost)}`
+            );
+        }
+
+        detail.textContent = details.join(" · ");
+    } else if (selection.payment_type === "bus_tram_pass") {
+        title.textContent = selection.product_name;
+        detail.textContent = [
+            `Pass ${formatCurrency(selection.pass_cost)}`,
+            `${selection.covered_journey_count} covered journeys`,
         ].join(" · ");
     } else {
         title.textContent = "Pay as you go";

@@ -28,7 +28,7 @@ class PaygSelectionResponse(BaseModel):
 
 
 class TravelcardSelectionResponse(BaseModel):
-    """A Travelcard period selected by the optimiser."""
+    """A Travelcard purchase selected by the optimiser."""
 
     payment_type: Literal["travelcard"] = "travelcard"
     product_name: str
@@ -43,9 +43,26 @@ class TravelcardSelectionResponse(BaseModel):
     uncovered_journey_count: int
 
 
+class BusTramPassSelectionResponse(BaseModel):
+    """A Bus & Tram Pass purchase selected by the optimiser."""
+
+    payment_type: Literal["bus_tram_pass"] = "bus_tram_pass"
+    product_name: str
+    start_date: date
+    end_date: date
+    pass_cost: str
+    total_cost: str
+    covered_journey_count: int
+
+
 PaymentSelectionResponse = Annotated[
-    PaygSelectionResponse | TravelcardSelectionResponse,
-    Field(discriminator="payment_type")]
+    (
+        PaygSelectionResponse
+        | TravelcardSelectionResponse
+        | BusTramPassSelectionResponse
+    ),
+    Field(discriminator="payment_type"),
+]
 
 
 class AnalysisResponse(BaseModel):
@@ -57,6 +74,7 @@ class AnalysisResponse(BaseModel):
     optimized_total: str
     estimated_saving: str
     uses_travelcard: bool
+    uses_bus_tram_pass: bool = False
     input_summary: InputSummaryResponse | None
     selections: list[PaymentSelectionResponse]
     warnings: list[str]

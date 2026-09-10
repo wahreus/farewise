@@ -2,7 +2,13 @@
 
 from datetime import date
 from src.fares import format_money
-from src.results import OptimizationResult, PaygSelection, TravelcardSelection
+from src.results import (
+    BusTramPassSelection,
+    OptimizationResult,
+    PaygSelection,
+    TravelcardSelection,
+)
+
 
 def format_date(value: date) -> str:
     """Format a date for FareWise report output."""
@@ -18,39 +24,69 @@ def format_payg(selection: PaygSelection) -> str:
     """Format one PAYG selection for the report."""
     period = format_date_range(selection.start_date, selection.end_date)
     journey_word = "journey" if selection.journey_count == 1 else "journeys"
-    return (f"PAYG, {period}: {format_money(selection.total_cost)} "
-            f"({selection.journey_count} {journey_word})")
+    return (
+        f"PAYG, {period}: {format_money(selection.total_cost)} "
+        f"({selection.journey_count} {journey_word})"
+    )
+
 
 def format_travelcard(selection: TravelcardSelection) -> str:
     """Format one Travelcard selection for the report."""
     period = format_date_range(selection.start_date, selection.end_date)
     cost_parts = f"card {format_money(selection.card_cost)}"
     if selection.outside_payg_cost:
-        cost_parts += (" + outside PAYG "
-                       f"{format_money(selection.outside_payg_cost)}")
-    return (f"{selection.product_name} {selection.zone_name}, {period}: "
-            f"{format_money(selection.total_cost)} ({cost_parts}; "
-            f"{selection.covered_journey_count} covered, "
-            f"{selection.uncovered_journey_count} outside)")
+        cost_parts += (
+            " + outside PAYG "
+            f"{format_money(selection.outside_payg_cost)}"
+        )
+    return (
+        f"{selection.product_name} {selection.zone_name}, {period}: "
+        f"{format_money(selection.total_cost)} ({cost_parts}; "
+        f"{selection.covered_journey_count} covered, "
+        f"{selection.uncovered_journey_count} outside)"
+    )
+
+
+def format_bus_tram_pass(selection: BusTramPassSelection) -> str:
+    """Format one Bus & Tram Pass selection for the report."""
+
+    period = format_date_range(selection.start_date, selection.end_date)
+    journey_word = (
+        "journey"
+        if selection.covered_journey_count == 1
+        else "journeys"
+    )
+    return (
+        f"{selection.product_name}, {period}: "
+        f"{format_money(selection.pass_cost)} "
+        f"({selection.covered_journey_count} {journey_word} covered)"
+    )
+
 
 def format_report(result: OptimizationResult) -> str:
     """Build the complete human-readable FareWise report."""
     lines = [
         "\nFareWise result",
         "===============",
-        ("Journey period: "
-         f"{format_date_range(result.journey_start_date, result.journey_end_date)}"),
+        (
+            "Journey period: "
+            f"{format_date_range(result.journey_start_date, result.journey_end_date)}"
+        ),
         f"Recorded PAYG total: {format_money(result.payg_total)}",
         f"Lowest estimated total: {format_money(result.optimized_total)}",
         f"Estimated saving: {format_money(result.savings)}",
         "",
         "Recommended strategy",
-        "--------------------"]
+        "--------------------",
+    ]
+
     for selection in result.selections:
         if isinstance(selection, PaygSelection):
             lines.append(f"- {format_payg(selection)}")
-        else:
+        elif isinstance(selection, TravelcardSelection):
             lines.append(f"- {format_travelcard(selection)}")
+        else:
+            lines.append(f"- {format_bus_tram_pass(selection)}")
     if result.warnings:
         lines.extend(["", "Important limitations", "---------------------"])
         lines.extend(f"- {warning}" for warning in result.warnings)

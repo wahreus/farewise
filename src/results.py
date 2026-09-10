@@ -19,7 +19,8 @@ class PaygSelection:
 
 @dataclass(frozen=True)
 class TravelcardSelection:
-    """Selected Travelcard period and any outside PAYG usage."""
+    """Selected Travelcard purchase."""
+
     product_name: str
     zone_name: str
     max_zone: int
@@ -32,10 +33,30 @@ class TravelcardSelection:
 
     @property
     def total_cost(self) -> Decimal:
-        """Return the Travelcard cost including outside PAYG."""
+        """Return the Travelcard cost including attached outside PAYG."""
+
         return self.card_cost + self.outside_payg_cost
 
-PaymentSelection = PaygSelection | TravelcardSelection
+
+@dataclass(frozen=True)
+class BusTramPassSelection:
+    """Selected Bus & Tram Pass purchase."""
+
+    product_name: str
+    start_date: date
+    end_date: date
+    pass_cost: Decimal
+    covered_journey_count: int
+
+    @property
+    def total_cost(self) -> Decimal:
+        """Return the Bus & Tram Pass purchase cost."""
+
+        return self.pass_cost
+
+
+PaymentSelection = PaygSelection | TravelcardSelection | BusTramPassSelection
+
 
 @dataclass(frozen=True)
 class OptimizationResult:
@@ -55,5 +76,17 @@ class OptimizationResult:
     @property
     def uses_travelcard(self) -> bool:
         """Return whether the strategy includes a Travelcard."""
-        return any(isinstance(selection, TravelcardSelection)
-                   for selection in self.selections)
+
+        return any(
+            isinstance(selection, TravelcardSelection)
+            for selection in self.selections
+        )
+
+    @property
+    def uses_bus_tram_pass(self) -> bool:
+        """Return whether the strategy includes a Bus & Tram Pass."""
+
+        return any(
+            isinstance(selection, BusTramPassSelection)
+            for selection in self.selections
+        )
