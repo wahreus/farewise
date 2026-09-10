@@ -24,7 +24,6 @@ FareWise compares strategies including:
 
 ```text
 PAYG only
-
 Zone 1    Travelcard + PAYG outside Zone 1
 Zones 1–2 Travelcard + PAYG outside Zones 1–2
 Zones 1–3 Travelcard + PAYG outside Zones 1–3
