@@ -31,12 +31,23 @@ class UndergroundFareOption:
     pay_as_you_go: PayAsYouGoCaps
     travelcard: TravelcardPrices
 
+
+@dataclass(frozen=True)
+class BusAndTramPassPrices:
+    """Bus & Tram Pass prices."""
+
+    one_day: Decimal
+    seven_day: Decimal
+    monthly: Decimal
+
+
 @dataclass(frozen=True)
 class FareData:
     """Complete FareWise fare table and metadata."""
     valid_from: str
     currency: str
     underground: dict[str, UndergroundFareOption]
+    bus_and_tram_pass: BusAndTramPassPrices | None = None
 
 def as_decimal(value: str | int | float | Decimal) -> Decimal:
     """Convert a supported numeric value to Decimal."""
@@ -54,15 +65,32 @@ def load_fare_data(json_path: str | Path) -> FareData:
             pay_as_you_go=PayAsYouGoCaps(
                 daily_anytime_cap=as_decimal(payg["daily_anytime_cap"]),
                 daily_off_peak_cap=as_decimal(payg["daily_off_peak_cap"]),
-                weekly_cap=as_decimal(payg["weekly_cap"])),
+                weekly_cap=as_decimal(payg["weekly_cap"]),
+            ),
             travelcard=TravelcardPrices(
                 one_day_anytime=as_decimal(travelcard["one_day_anytime"]),
                 one_day_off_peak=as_decimal(travelcard["one_day_off_peak"]),
                 seven_day=as_decimal(travelcard["seven_day"]),
-                monthly=as_decimal(travelcard["monthly"])))
-    return FareData(valid_from=data["valid_from"],
-                    currency=data["currency"],
-                    underground=underground)
+                monthly=as_decimal(travelcard["monthly"]),
+            ),
+        )
+
+    bus_and_tram_pass = None
+    pass_values = data.get("bus_and_tram", {}).get("pass")
+    if pass_values is not None:
+        bus_and_tram_pass = BusAndTramPassPrices(
+            one_day=as_decimal(pass_values["one_day"]),
+            seven_day=as_decimal(pass_values["seven_day"]),
+            monthly=as_decimal(pass_values["monthly"]),
+        )
+
+    return FareData(
+        valid_from=data["valid_from"],
+        currency=data["currency"],
+        underground=underground,
+        bus_and_tram_pass=bus_and_tram_pass,
+    )
+
 
 def format_money(value: Decimal) -> str:
     """Format a Decimal value as pounds and pence."""
@@ -76,14 +104,34 @@ def main() -> None:
     for zone_name, option in fare_data.underground.items():
         print(zone_name)
         print("  Pay as you go caps")
-        print(f"    Daily anytime: {format_money(option.pay_as_you_go.daily_anytime_cap)}")
-        print(f"    Daily off-peak: {format_money(option.pay_as_you_go.daily_off_peak_cap)}")
+        print(
+            "    Daily anytime: "
+            f"{format_money(option.pay_as_you_go.daily_anytime_cap)}"
+        )
+        print(
+            "    Daily off-peak: "
+            f"{format_money(option.pay_as_you_go.daily_off_peak_cap)}"
+        )
         print(f"    Weekly: {format_money(option.pay_as_you_go.weekly_cap)}")
         print("  Travelcards")
-        print(f"    One day anytime: {format_money(option.travelcard.one_day_anytime)}")
-        print(f"    One day off-peak: {format_money(option.travelcard.one_day_off_peak)}")
+        print(
+            "    One day anytime: "
+            f"{format_money(option.travelcard.one_day_anytime)}"
+        )
+        print(
+            "    One day off-peak: "
+            f"{format_money(option.travelcard.one_day_off_peak)}"
+        )
         print(f"    7 day: {format_money(option.travelcard.seven_day)}")
         print(f"    Monthly: {format_money(option.travelcard.monthly)}\n")
+
+    if fare_data.bus_and_tram_pass is not None:
+        prices = fare_data.bus_and_tram_pass
+        print("Bus & Tram Passes")
+        print(f"  One day: {format_money(prices.one_day)}")
+        print(f"  7 day: {format_money(prices.seven_day)}")
+        print(f"  Monthly: {format_money(prices.monthly)}")
+
 
 if __name__ == "__main__":
     main()
