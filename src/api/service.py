@@ -107,8 +107,7 @@ def build_analysis_response(
         selections=[
             build_selection_response(selection)
             for selection in result.selections
-        ],
-        warnings=list(result.warnings),
+        ]
     )
 
 

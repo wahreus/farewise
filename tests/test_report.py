@@ -36,16 +36,14 @@ def travelcard_selection(outside_payg_cost: str = "2.80",
                                uncovered_journey_count=1)
 
 
-def optimization_result(warnings: tuple[str, ...] = ("Example warning",),
-                        ) -> OptimizationResult:
+def optimization_result() -> OptimizationResult:
     """Build a representative optimization result for report tests."""
     return OptimizationResult(
         journey_start_date=date(2026, 3, 1),
         journey_end_date=date(2026, 3, 9),
         payg_total=Decimal("60.00"),
         optimized_total=Decimal("58.70"),
-        selections=(payg_selection(), travelcard_selection()),
-        warnings=warnings)
+        selections=(payg_selection(), travelcard_selection()))
 
 
 def test_format_date_uses_day_abbreviated_month_and_year() -> None:
@@ -111,22 +109,11 @@ def test_format_report_builds_complete_report() -> None:
         "--------------------\n"
         "- PAYG, 01 Mar 2026 - 02 Mar 2026: £11.20 (2 journeys)\n"
         "- 7 Day Zones 1-2, 03 Mar 2026 - 09 Mar 2026: £47.50 "
-        "(card £44.70 + outside PAYG £2.80; 10 covered, 1 outside)\n"
-        "\n"
-        "Important limitations\n"
-        "---------------------\n"
-        "- Example warning\n")
-
-
-def test_format_report_omits_limitations_without_warnings() -> None:
-    """Verify that format report omits limitations without warnings."""
-    report = format_report(optimization_result(warnings=()))
-    assert "Important limitations" not in report
-    assert report.endswith("1 outside)\n")
+        "(card £44.70 + outside PAYG £2.80; 10 covered, 1 outside)\n")
 
 
 def test_print_report_prints_formatted_report(capsys) -> None:
     """Verify that print report prints formatted report."""
-    result = optimization_result(warnings=())
+    result = optimization_result()
     print_report(result)
     assert capsys.readouterr().out == format_report(result) + "\n"

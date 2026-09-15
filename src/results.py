@@ -66,7 +66,6 @@ class OptimizationResult:
     payg_total: Decimal
     optimized_total: Decimal
     selections: tuple[PaymentSelection, ...]
-    warnings: tuple[str, ...] = ()
 
     @property
     def savings(self) -> Decimal:

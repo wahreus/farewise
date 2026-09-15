@@ -74,50 +74,6 @@ def merge_adjacent_payg(
     return tuple(merged)
 
 
-def build_warnings(
-    journeys: list[Journey],
-    fare_data: FareData,
-) -> tuple[str, ...]:
-    """Build limitation warnings for an optimization result."""
-
-    if fare_data.bus_and_tram_pass is None:
-        warnings = [
-            "Travelcard coverage is estimated from journey endpoints; routes "
-            "and boundary extension fares are not modelled.",
-            "Journeys outside Travelcard coverage keep their recorded PAYG "
-            "charge; PAYG caps are not recalculated.",
-            "One Day Off-Peak uses a simplified rule: weekends or journeys "
-            "starting at or after 09:30 on weekdays.",
-        ]
-    else:
-        warnings = [
-            "Travelcard coverage is estimated from journey endpoints; routes "
-            "and boundary extension fares are not modelled.",
-            "Journeys not covered by any active pass keep their recorded PAYG "
-            "charge; PAYG caps are not recalculated.",
-            "One Day Off-Peak uses a simplified rule: weekends or journeys "
-            "starting at or after 09:30 on weekdays.",
-            "Bus & Tram Pass coverage currently applies to supported bus "
-            "journeys; tram journey parsing is not yet implemented.",
-        ]
-
-    try:
-        valid_from = date.fromisoformat(fare_data.valid_from)
-    except ValueError:
-        valid_from = None
-
-    if valid_from is not None and any(
-        journey.date < valid_from for journey in journeys
-    ):
-        warnings.insert(
-            0,
-            "The journey history predates the fare table, so the comparison "
-            f"mixes recorded charges with fares valid from {fare_data.valid_from}.",
-        )
-
-    return tuple(warnings)
-
-
 def _optimize_travelcard_only(
     journeys: Iterable[Journey],
     stations: dict[tuple[str, str], Station],
@@ -192,7 +148,6 @@ def _optimize_travelcard_only(
         payg_total=calculate_payg_total(journey_list),
         optimized_total=optimized_total,
         selections=merge_adjacent_payg(selections),
-        warnings=build_warnings(journey_list, fare_data),
     )
 
 
@@ -441,7 +396,6 @@ def _optimize_with_bus_tram_passes(
         payg_total=calculate_payg_total(journey_list),
         optimized_total=optimized_total,
         selections=merge_adjacent_payg(selections),
-        warnings=build_warnings(journey_list, fare_data),
     )
 
 
