@@ -87,9 +87,6 @@ def format_report(result: OptimizationResult) -> str:
             lines.append(f"- {format_travelcard(selection)}")
         else:
             lines.append(f"- {format_bus_tram_pass(selection)}")
-    if result.warnings:
-        lines.extend(["", "Important limitations", "---------------------"])
-        lines.extend(f"- {warning}" for warning in result.warnings)
     return "\n".join(lines) + "\n"
 
 def print_report(result: OptimizationResult) -> None:

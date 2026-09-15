@@ -77,4 +77,3 @@ class AnalysisResponse(BaseModel):
     uses_bus_tram_pass: bool = False
     input_summary: InputSummaryResponse | None
     selections: list[PaymentSelectionResponse]
-    warnings: list[str]

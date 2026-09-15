@@ -1,4 +1,4 @@
-"""Tests for fare optimization, selection merging, and warnings."""
+"""Tests for fare optimization and selection merging."""
 
 from datetime import date, time
 from decimal import Decimal
@@ -10,8 +10,7 @@ from src.fares import (FareData,
                        TravelcardPrices,
                        UndergroundFareOption)
 from src.journeys import Journey
-from src.optimizer import (build_warnings,
-                           merge_adjacent_payg,
+from src.optimizer import (merge_adjacent_payg,
                            optimize_fares,
                            selection_key)
 from src.results import PaygSelection, TravelcardSelection
@@ -132,33 +131,6 @@ def test_merge_adjacent_payg_does_not_merge_across_travelcard() -> None:
                             1)
     selections = (first, travelcard_selection(), second)
     assert merge_adjacent_payg(selections) == selections
-
-
-def test_build_warnings_returns_standard_limitations() -> None:
-    """Verify that build warnings returns standard limitations."""
-    warnings = build_warnings([make_journey(date(2026, 3, 1))],
-                              make_fare_data())
-    assert len(warnings) == 3
-    assert warnings[0].startswith("Travelcard coverage is estimated")
-    assert warnings[1].startswith("Journeys outside Travelcard coverage")
-    assert warnings[2].startswith("One Day Off-Peak")
-
-
-def test_build_warnings_adds_warning_for_older_journeys() -> None:
-    """Verify that build warnings adds warning for older journeys."""
-    warnings = build_warnings([make_journey(date(2026, 2, 28))],
-                              make_fare_data())
-    assert len(warnings) == 4
-    assert warnings[0] == (
-        "The journey history predates the fare table, so the comparison "
-        "mixes recorded charges with fares valid from 2026-03-01.")
-
-
-def test_build_warnings_ignores_invalid_valid_from_date() -> None:
-    """Verify that build warnings ignores invalid valid from date."""
-    warnings = build_warnings([make_journey(date(2026, 2, 28))],
-                              make_fare_data(valid_from="unknown"))
-    assert len(warnings) == 3
 
 
 def test_optimize_fares_rejects_empty_journey_history() -> None:
