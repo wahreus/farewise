@@ -55,11 +55,30 @@ class BusTramPassSelectionResponse(BaseModel):
     covered_journey_count: int
 
 
+class StrategyPeriodSelectionResponse(BaseModel):
+    """One non-overlapping period in a combined optimized strategy."""
+
+    payment_type: Literal["strategy_period"] = "strategy_period"
+    start_date: date
+    end_date: date
+    travelcard_product_name: str | None
+    travelcard_zone_name: str | None
+    travelcard_max_zone: int | None
+    travelcard_cost: str
+    bus_tram_pass_product_name: str | None
+    bus_tram_pass_cost: str
+    payg_cost: str
+    total_cost: str
+    covered_journey_count: int
+    payg_journey_count: int
+
+
 PaymentSelectionResponse = Annotated[
     (
         PaygSelectionResponse
         | TravelcardSelectionResponse
         | BusTramPassSelectionResponse
+        | StrategyPeriodSelectionResponse
     ),
     Field(discriminator="payment_type"),
 ]

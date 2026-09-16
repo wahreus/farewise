@@ -55,7 +55,35 @@ class BusTramPassSelection:
         return self.pass_cost
 
 
-PaymentSelection = PaygSelection | TravelcardSelection | BusTramPassSelection
+@dataclass(frozen=True)
+class StrategyPeriodSelection:
+    """One non-overlapping period in a combined optimized strategy."""
+
+    start_date: date
+    end_date: date
+    travelcard_product_name: str | None
+    travelcard_zone_name: str | None
+    travelcard_max_zone: int | None
+    travelcard_cost: Decimal
+    bus_tram_pass_product_name: str | None
+    bus_tram_pass_cost: Decimal
+    payg_cost: Decimal
+    covered_journey_count: int
+    payg_journey_count: int
+
+    @property
+    def total_cost(self) -> Decimal:
+        """Return all costs incurred during the strategy period."""
+
+        return self.travelcard_cost + self.bus_tram_pass_cost + self.payg_cost
+
+
+PaymentSelection = (
+    PaygSelection
+    | TravelcardSelection
+    | BusTramPassSelection
+    | StrategyPeriodSelection
+)
 
 
 @dataclass(frozen=True)
@@ -78,6 +106,10 @@ class OptimizationResult:
 
         return any(
             isinstance(selection, TravelcardSelection)
+            or (
+                isinstance(selection, StrategyPeriodSelection)
+                and selection.travelcard_product_name is not None
+            )
             for selection in self.selections
         )
 
@@ -87,5 +119,9 @@ class OptimizationResult:
 
         return any(
             isinstance(selection, BusTramPassSelection)
+            or (
+                isinstance(selection, StrategyPeriodSelection)
+                and selection.bus_tram_pass_product_name is not None
+            )
             for selection in self.selections
         )
