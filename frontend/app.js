@@ -273,6 +273,14 @@ function createSelection(selection) {
         const hasBusTramPass = Boolean(selection.bus_tram_pass_product_name);
 
         if (hasTravelcard) {
+            article.classList.add("travelcard");
+        } else if (hasBusTramPass) {
+            article.classList.add("bus-tram");
+        } else {
+            article.classList.add("payg");
+        }
+
+        if (hasTravelcard) {
             titleParts.push(
                 `${selection.travelcard_product_name}, ${selection.travelcard_zone_name}`
             );
@@ -320,6 +328,7 @@ function createSelection(selection) {
             detail.textContent = details.join(" · ");
         }
     } else if (selection.payment_type === "travelcard") {
+        article.classList.add("travelcard");
         title.textContent = `${selection.product_name}, ${selection.zone_name}`;
 
         const details = [
@@ -335,12 +344,14 @@ function createSelection(selection) {
 
         detail.textContent = details.join(" · ");
     } else if (selection.payment_type === "bus_tram_pass") {
+        article.classList.add("bus-tram");
         title.textContent = selection.product_name;
         detail.textContent = [
             `Pass ${formatCurrency(selection.pass_cost)}`,
             `${selection.covered_journey_count} covered journeys`,
         ].join(" · ");
     } else {
+        article.classList.add("payg");
         title.textContent = "Pay as you go";
         detail.textContent =
             `${selection.journey_count} ${pluralize("journey", selection.journey_count)}`;
