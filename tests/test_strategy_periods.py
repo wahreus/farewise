@@ -144,3 +144,44 @@ def test_travelcard_period_can_include_residual_payg() -> None:
     assert period.total_cost == Decimal("59.10")
 
     assert_periods_do_not_overlap(periods)
+
+
+def test_payg_period_spans_days_without_journeys() -> None:
+    journey_dates = (
+        date(2026, 5, 10),
+        date(2026, 5, 12),
+        date(2026, 5, 14),
+        date(2026, 5, 16),
+        date(2026, 5, 19),
+        date(2026, 5, 22),
+        date(2026, 5, 23),
+        date(2026, 5, 24),
+    )
+    journeys = [make_journey(day) for day in journey_dates]
+    selections = tuple(
+        PaygSelection(
+            start_date=day,
+            end_date=day,
+            cost=Decimal("2.00"),
+            journey_count=1,
+        )
+        for day in journey_dates
+    )
+
+    periods = _build_strategy_periods(
+        selections,
+        group_journeys_by_date(journeys),
+        journey_dates[0],
+        journey_dates[-1],
+    )
+
+    assert len(periods) == 1
+    period = periods[0]
+    assert isinstance(period, StrategyPeriodSelection)
+    assert period.start_date == date(2026, 5, 10)
+    assert period.end_date == date(2026, 5, 24)
+    assert period.travelcard_product_name is None
+    assert period.bus_tram_pass_product_name is None
+    assert period.payg_cost == Decimal("16.00")
+    assert period.payg_journey_count == 8
+    assert period.total_cost == Decimal("16.00")

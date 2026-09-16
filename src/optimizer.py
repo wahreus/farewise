@@ -137,6 +137,16 @@ def _build_strategy_periods(
             and active_bus_tram_pass is None
             and not daily_journeys
         ):
+            # A day without journeys should not split an otherwise continuous
+            # PAYG strategy period. Keep the current pure-PAYG period open so
+            # the next PAYG journey can extend it.
+            if (
+                current_period is not None
+                and current_period.travelcard_product_name is None
+                and current_period.bus_tram_pass_product_name is None
+            ):
+                continue
+
             if current_period is not None:
                 periods.append(current_period)
                 current_period = None
@@ -198,10 +208,18 @@ def _build_strategy_periods(
             ),
         )
 
+        is_pure_payg = (
+            active_travelcard is None
+            and active_bus_tram_pass is None
+        )
+
         if (
             current_period is not None
             and current_signature == signature
-            and current_period.end_date + timedelta(days=1) == current_date
+            and (
+                current_period.end_date + timedelta(days=1) == current_date
+                or is_pure_payg
+            )
         ):
             current_period = StrategyPeriodSelection(
                 start_date=current_period.start_date,
@@ -287,6 +305,7 @@ def _optimize_travelcard_only(
     @lru_cache(maxsize=None)
     def solve(day_index: int) -> tuple[Decimal, tuple[PaymentSelection, ...]]:
         """Return the cheapest strategy from the given history day onward."""
+
         if day_index >= history_day_count:
             return ZERO, ()
         current_date = history_start + timedelta(days=day_index)
