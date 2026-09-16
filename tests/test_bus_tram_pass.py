@@ -12,7 +12,11 @@ from src.fares import (
 )
 from src.journeys import BUS_MODE, Journey
 from src.optimizer import optimize_fares
-from src.results import BusTramPassSelection, TravelcardSelection
+from src.results import (
+    BusTramPassSelection,
+    StrategyPeriodSelection,
+    TravelcardSelection,
+)
 from src.stations import Station
 
 
@@ -86,6 +90,7 @@ def test_optimizer_combines_overlapping_bus_pass_and_travelcard() -> None:
         bus_journey(first_day + timedelta(days=offset))
         for offset in range(60)
     ]
+
     journeys.extend(
         rail_journey(first_day + timedelta(days=offset))
         for offset in range(24, 31)
@@ -98,27 +103,29 @@ def test_optimizer_combines_overlapping_bus_pass_and_travelcard() -> None:
 
     result = optimize_fares(journeys, stations, fare_data())
 
-    bus_passes = [
+    strategy_periods = [
         selection
         for selection in result.selections
-        if isinstance(selection, BusTramPassSelection)
-    ]
-    travelcards = [
-        selection
-        for selection in result.selections
-        if isinstance(selection, TravelcardSelection)
+        if isinstance(selection, StrategyPeriodSelection)
     ]
 
     assert result.optimized_total == Decimal("50.00")
-    assert bus_passes
-    assert travelcards
+    assert result.uses_bus_tram_pass
+    assert result.uses_travelcard
 
+    # There should be a period where both passes are active.
     assert any(
-        bus_pass.start_date <= travelcard.end_date
-        and travelcard.start_date <= bus_pass.end_date
-        for bus_pass in bus_passes
-        for travelcard in travelcards
+        period.bus_tram_pass_product_name is not None
+        and period.travelcard_product_name is not None
+        for period in strategy_periods
     )
+
+    # Strategy periods must never overlap.
+    for previous, current in zip(
+        strategy_periods,
+        strategy_periods[1:],
+    ):
+        assert previous.end_date < current.start_date
 
 
 def test_bus_pass_does_not_cover_rail() -> None:

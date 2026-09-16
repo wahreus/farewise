@@ -204,7 +204,12 @@ function strategyLabel(result) {
     const hasTravelcard = Boolean(result.uses_travelcard);
     const hasBusTramPass = Boolean(result.uses_bus_tram_pass);
     const hasPayg = selections.some(
-        (selection) => selection.payment_type === "payg"
+        (selection) =>
+            selection.payment_type === "payg" ||
+            (
+                selection.payment_type === "strategy_period" &&
+                Number(selection.payg_cost) > 0
+            )
     );
 
     if (!hasTravelcard && !hasBusTramPass) {
@@ -237,36 +242,9 @@ function renderSelections(selections) {
         return;
     }
 
-    const groupedSelections = groupSelections(selections);
-
-    groupedSelections.forEach((selection) => {
+    selections.forEach((selection) => {
         container.append(createSelection(selection));
     });
-}
-
-function groupSelections(selections) {
-    const grouped = [];
-
-    selections.forEach((selection) => {
-        const previous = grouped[grouped.length - 1];
-
-        if (
-            selection.payment_type === "payg" &&
-            previous?.payment_type === "payg"
-        ) {
-            previous.end_date = selection.end_date;
-            previous.total_cost =
-                Number(previous.total_cost) + Number(selection.total_cost);
-            previous.journey_count =
-                Number(previous.journey_count) + Number(selection.journey_count);
-
-            return;
-        }
-
-        grouped.push({ ...selection });
-    });
-
-    return grouped;
 }
 
 function createSelection(selection) {
@@ -288,7 +266,60 @@ function createSelection(selection) {
         `${formatDate(selection.start_date)} - ${formatDate(selection.end_date)}`;
     cost.textContent = formatCurrency(selection.total_cost);
 
-    if (selection.payment_type === "travelcard") {
+    if (selection.payment_type === "strategy_period") {
+        const titleParts = [];
+        const details = [];
+        const hasTravelcard = Boolean(selection.travelcard_product_name);
+        const hasBusTramPass = Boolean(selection.bus_tram_pass_product_name);
+
+        if (hasTravelcard) {
+            titleParts.push(
+                `${selection.travelcard_product_name}, ${selection.travelcard_zone_name}`
+            );
+            if (Number(selection.travelcard_cost) > 0) {
+                details.push(
+                    `Travelcard ${formatCurrency(selection.travelcard_cost)}`
+                );
+            } else {
+                details.push("Travelcard active");
+            }
+        }
+
+        if (hasBusTramPass) {
+            titleParts.push(selection.bus_tram_pass_product_name);
+            if (Number(selection.bus_tram_pass_cost) > 0) {
+                details.push(
+                    `Pass ${formatCurrency(selection.bus_tram_pass_cost)}`
+                );
+            } else {
+                details.push("Bus & Tram Pass active");
+            }
+        }
+
+        if (titleParts.length === 0) {
+            title.textContent = "Pay as you go";
+            detail.textContent =
+                `${selection.payg_journey_count} ${pluralize("journey", selection.payg_journey_count)}`;
+        } else {
+            title.textContent = titleParts.join(" + ");
+
+            if (Number(selection.covered_journey_count) > 0) {
+                details.push(
+                    `${selection.covered_journey_count} covered journeys`
+                );
+            }
+
+            if (Number(selection.payg_journey_count) > 0) {
+                details.push(
+                    `PAYG ${formatCurrency(selection.payg_cost)} · ` +
+                    `${selection.payg_journey_count} ` +
+                    `${pluralize("journey", selection.payg_journey_count)}`
+                );
+            }
+
+            detail.textContent = details.join(" · ");
+        }
+    } else if (selection.payment_type === "travelcard") {
         title.textContent = `${selection.product_name}, ${selection.zone_name}`;
 
         const details = [

@@ -23,6 +23,7 @@ from src.results import (
     OptimizationResult,
     PaymentSelection,
     PaygSelection,
+    StrategyPeriodSelection,
     TravelcardSelection,
 )
 from src.stations import Station
@@ -72,6 +73,200 @@ def merge_adjacent_payg(
         else:
             merged.append(selection)
     return tuple(merged)
+
+
+def _build_strategy_periods(
+    selections: tuple[PaymentSelection, ...],
+    journeys_by_date: dict[date, list[Journey]],
+    history_start: date,
+    history_end: date,
+) -> tuple[PaymentSelection, ...]:
+    """Convert overlapping pass/PAYG entries into one chronological timeline."""
+
+    travelcards = [
+        selection
+        for selection in selections
+        if isinstance(selection, TravelcardSelection)
+    ]
+    bus_tram_passes = [
+        selection
+        for selection in selections
+        if isinstance(selection, BusTramPassSelection)
+    ]
+    payg_by_date = {
+        selection.start_date: selection
+        for selection in selections
+        if isinstance(selection, PaygSelection)
+    }
+
+    pass_end_dates = [
+        selection.end_date
+        for selection in (*travelcards, *bus_tram_passes)
+    ]
+    timeline_end = max([history_end, *pass_end_dates])
+
+    periods: list[PaymentSelection] = []
+    current_period: StrategyPeriodSelection | None = None
+    current_signature: tuple[object, ...] | None = None
+
+    day_count = (timeline_end - history_start).days + 1
+    for day_offset in range(day_count):
+        current_date = history_start + timedelta(days=day_offset)
+        daily_journeys = journeys_by_date.get(current_date, [])
+
+        active_travelcard = next(
+            (
+                selection
+                for selection in travelcards
+                if selection.start_date <= current_date <= selection.end_date
+            ),
+            None,
+        )
+        active_bus_tram_pass = next(
+            (
+                selection
+                for selection in bus_tram_passes
+                if selection.start_date <= current_date <= selection.end_date
+            ),
+            None,
+        )
+        payg_selection = payg_by_date.get(current_date)
+
+        if (
+            active_travelcard is None
+            and active_bus_tram_pass is None
+            and not daily_journeys
+        ):
+            if current_period is not None:
+                periods.append(current_period)
+                current_period = None
+                current_signature = None
+            continue
+
+        payg_cost = (
+            payg_selection.total_cost
+            if payg_selection is not None
+            else ZERO
+        )
+        payg_journey_count = (
+            payg_selection.journey_count
+            if payg_selection is not None
+            else 0
+        )
+        covered_journey_count = max(
+            len(daily_journeys) - payg_journey_count,
+            0,
+        )
+
+        travelcard_cost = (
+            active_travelcard.card_cost
+            if (
+                active_travelcard is not None
+                and active_travelcard.start_date == current_date
+            )
+            else ZERO
+        )
+        bus_tram_pass_cost = (
+            active_bus_tram_pass.pass_cost
+            if (
+                active_bus_tram_pass is not None
+                and active_bus_tram_pass.start_date == current_date
+            )
+            else ZERO
+        )
+
+        signature = (
+            active_travelcard.product_name if active_travelcard else None,
+            active_travelcard.zone_name if active_travelcard else None,
+            active_travelcard.max_zone if active_travelcard else None,
+            active_travelcard.start_date if active_travelcard else None,
+            active_travelcard.end_date if active_travelcard else None,
+            (
+                active_bus_tram_pass.product_name
+                if active_bus_tram_pass
+                else None
+            ),
+            (
+                active_bus_tram_pass.start_date
+                if active_bus_tram_pass
+                else None
+            ),
+            (
+                active_bus_tram_pass.end_date
+                if active_bus_tram_pass
+                else None
+            ),
+        )
+
+        if (
+            current_period is not None
+            and current_signature == signature
+            and current_period.end_date + timedelta(days=1) == current_date
+        ):
+            current_period = StrategyPeriodSelection(
+                start_date=current_period.start_date,
+                end_date=current_date,
+                travelcard_product_name=current_period.travelcard_product_name,
+                travelcard_zone_name=current_period.travelcard_zone_name,
+                travelcard_max_zone=current_period.travelcard_max_zone,
+                travelcard_cost=(
+                    current_period.travelcard_cost + travelcard_cost
+                ),
+                bus_tram_pass_product_name=(
+                    current_period.bus_tram_pass_product_name
+                ),
+                bus_tram_pass_cost=(
+                    current_period.bus_tram_pass_cost + bus_tram_pass_cost
+                ),
+                payg_cost=current_period.payg_cost + payg_cost,
+                covered_journey_count=(
+                    current_period.covered_journey_count
+                    + covered_journey_count
+                ),
+                payg_journey_count=(
+                    current_period.payg_journey_count + payg_journey_count
+                ),
+            )
+            continue
+
+        if current_period is not None:
+            periods.append(current_period)
+
+        current_period = StrategyPeriodSelection(
+            start_date=current_date,
+            end_date=current_date,
+            travelcard_product_name=(
+                active_travelcard.product_name
+                if active_travelcard is not None
+                else None
+            ),
+            travelcard_zone_name=(
+                active_travelcard.zone_name
+                if active_travelcard is not None
+                else None
+            ),
+            travelcard_max_zone=(
+                active_travelcard.max_zone
+                if active_travelcard is not None
+                else None
+            ),
+            travelcard_cost=travelcard_cost,
+            bus_tram_pass_product_name=(
+                active_bus_tram_pass.product_name
+                if active_bus_tram_pass is not None
+                else None
+            ),
+            bus_tram_pass_cost=bus_tram_pass_cost,
+            payg_cost=payg_cost,
+            covered_journey_count=covered_journey_count,
+            payg_journey_count=payg_journey_count,
+        )
+        current_signature = signature
+
+    if current_period is not None:
+        periods.append(current_period)
+
+    return tuple(periods)
 
 
 def _optimize_travelcard_only(
@@ -389,13 +584,19 @@ def _optimize_with_bus_tram_passes(
         return best_cost, best_selections
 
     optimized_total, selections = solve(0, None, None)
+    strategy_periods = _build_strategy_periods(
+        selections,
+        journeys_by_date,
+        history_start,
+        history_end,
+    )
 
     return OptimizationResult(
         journey_start_date=history_start,
         journey_end_date=history_end,
         payg_total=calculate_payg_total(journey_list),
         optimized_total=optimized_total,
-        selections=merge_adjacent_payg(selections),
+        selections=strategy_periods,
     )
 
 

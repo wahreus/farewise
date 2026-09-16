@@ -10,6 +10,7 @@ from src.api.models import (
     InputSummaryResponse,
     PaygSelectionResponse,
     PaymentSelectionResponse,
+    StrategyPeriodSelectionResponse,
     TravelcardSelectionResponse,
 )
 from src.coverage import REFERENCE_DIR, load_station_lookup
@@ -21,6 +22,7 @@ from src.results import (
     OptimizationResult,
     PaygSelection,
     PaymentSelection,
+    StrategyPeriodSelection,
     TravelcardSelection,
 )
 
@@ -84,6 +86,21 @@ def build_selection_response(
             pass_cost=format_amount(selection.pass_cost),
             total_cost=format_amount(selection.total_cost),
             covered_journey_count=selection.covered_journey_count,
+        )
+    if isinstance(selection, StrategyPeriodSelection):
+        return StrategyPeriodSelectionResponse(
+            start_date=selection.start_date,
+            end_date=selection.end_date,
+            travelcard_product_name=selection.travelcard_product_name,
+            travelcard_zone_name=selection.travelcard_zone_name,
+            travelcard_max_zone=selection.travelcard_max_zone,
+            travelcard_cost=format_amount(selection.travelcard_cost),
+            bus_tram_pass_product_name=selection.bus_tram_pass_product_name,
+            bus_tram_pass_cost=format_amount(selection.bus_tram_pass_cost),
+            payg_cost=format_amount(selection.payg_cost),
+            total_cost=format_amount(selection.total_cost),
+            covered_journey_count=selection.covered_journey_count,
+            payg_journey_count=selection.payg_journey_count,
         )
 
     raise TypeError(f"Unsupported payment selection: {type(selection)!r}")
