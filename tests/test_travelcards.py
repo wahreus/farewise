@@ -234,7 +234,7 @@ def test_evaluate_travelcard_counts_covered_and_uncovered_journeys() -> None:
                              charged_amount="4.00")]
     selection = evaluate_travelcard(option, journeys, sample_stations())
     assert selection == TravelcardSelection(
-        product_name="7 Day",
+        product_name="7 Day Travelcard",
         zone_name="Zones 1-2",
         max_zone=2,
         start_date=date(2026, 3, 1),
