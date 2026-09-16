@@ -286,7 +286,7 @@ button:disabled {
     display: grid;
     grid-template-columns: 1fr auto;
     gap: 5px 14px;
-    padding: 14px 0 14px 14px;
+    padding: 14px 0 14px 24px;
     border-top: 1px solid var(--border);
 }
 
@@ -294,10 +294,11 @@ button:disabled {
     content: "";
     position: absolute;
     left: 0;
-    top: 4px;
-    bottom: 4px;
-    width: 10px;
+    top: 50%;
+    width: 8px;
+    height: 110px;
     border-radius: 3px;
+    transform: translateY(-50%);
 }
 
 .selection.payg::before {

@@ -84,7 +84,7 @@ def payg_selection(start_date: date,
 
 def travelcard_selection() -> TravelcardSelection:
     """Build a representative seven-day Travelcard selection."""
-    return TravelcardSelection(product_name="7 Day",
+    return TravelcardSelection(product_name="7 Day Travelcard",
                                zone_name="Zones 1–2",
                                max_zone=2,
                                start_date=date(2026, 3, 1),
@@ -189,7 +189,7 @@ def test_optimize_fares_chooses_cheaper_seven_day_travelcard() -> None:
     assert len(result.selections) == 1
     selection = result.selections[0]
     assert isinstance(selection, TravelcardSelection)
-    assert selection.product_name == "7 Day"
+    assert selection.product_name == "7 Day Travelcard"
     assert selection.start_date == date(2026, 3, 1)
     assert selection.end_date == date(2026, 3, 7)
     assert selection.covered_journey_count == 2

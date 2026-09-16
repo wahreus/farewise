@@ -18,10 +18,10 @@ ZERO = Decimal("0.00")
 
 class TravelcardType(str, Enum):
     """Travelcard products considered by the optimizer."""
-    ONE_DAY_ANYTIME = "1 Day Anytime"
-    ONE_DAY_OFF_PEAK = "1 Day Off-Peak"
-    SEVEN_DAY = "7 Day"
-    MONTHLY = "Monthly"
+    ONE_DAY_ANYTIME = "1 Day Anytime Travelcard"
+    ONE_DAY_OFF_PEAK = "1 Day Off-Peak Travelcard"
+    SEVEN_DAY = "7 Day Travelcard"
+    MONTHLY = "Monthly Travelcard"
 
 @dataclass(frozen=True)
 class TravelcardOption:
