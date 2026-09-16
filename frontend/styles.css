@@ -282,24 +282,34 @@ button:disabled {
 }
 
 .selection {
+    position: relative;
     display: grid;
     grid-template-columns: 1fr auto;
     gap: 5px 14px;
-    padding: 14px 0 14px 12px;
+    padding: 14px 0 14px 14px;
     border-top: 1px solid var(--border);
-    border-left: 4px solid transparent;
 }
 
-.selection.payg {
-    border-left-color: #0072ce;
+.selection::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 4px;
+    bottom: 4px;
+    width: 10px;
+    border-radius: 3px;
 }
 
-.selection.travelcard {
-    border-left-color: #dc241f;
+.selection.payg::before {
+    background: #0072ce;
 }
 
-.selection.bus-tram {
-    border-left-color: #00843d;
+.selection.travelcard::before {
+    background: #dc241f;
+}
+
+.selection.bus-tram::before {
+    background: #00843d;
 }
 
 .selection:first-child {
