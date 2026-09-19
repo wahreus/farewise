@@ -64,7 +64,7 @@ FareWise uses a serverless AWS architecture with Amazon CloudFront as the public
 FareWise uses GitHub Actions for continuous integration and deployment. CI runs automated tests and Terraform checks for code changes. For changes pushed to the main branch, the CD workflow uses GitHub OIDC to assume an AWS IAM deployment role with temporary credentials before deploying updates to AWS (S3, Lambda, CloudFront).
 
 <p align="center">
-  <img src="figures/farewise_cicd.svg" alt="FareWise CI/CD workflow" width="100%">
+  <img src="figures/farewise_cicd.svg" alt="FareWise CI/CD workflow" width="75%">
 </p>
 
 <p align="center"><em>Figure 2. FareWise CI/CD workflow.</em></p>
