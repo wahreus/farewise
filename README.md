@@ -16,16 +16,6 @@ FareWise can also be run locally:
 python farewise.py journey_history.csv
 ```
 
-## AWS Architecture
-
-FareWise uses a serverless AWS architecture with Amazon CloudFront as the public entry point. Static frontend assets are served from a private Amazon S3 bucket through CloudFront Origin Access Control (OAC), while requests matching `/analyses*` are routed through Amazon API Gateway to the AWS Lambda function that runs the FareWise API.
-
-<p align="center">
-  <img src="figures/farewise_architecture.svg" alt="FareWise AWS architecture" width="100%">
-</p>
-
-<p align="center"><em>Figure 1. FareWise AWS architecture.</em></p>
-
 ## How the comparison works
 
 FareWise compares PAYG (Pay as you go), Travelcards, and Bus & Tram Passes using TfL’s published fare information from the [TfL fares page](https://tfl.gov.uk/fares/new-fares).
@@ -58,3 +48,23 @@ Date-based payment options are tested across the journey history. For example, a
 When passes are combined, FareWise applies each pass only to the journeys it covers. Bus and tram journeys can be covered by a Bus & Tram Pass, journeys within the selected Travelcard zones can be covered by the Travelcard, and any remaining journeys are charged using PAYG.
 
 FareWise compares all tested strategies and reports the cheapest estimated option.
+
+## AWS architecture
+
+FareWise uses a serverless AWS architecture with Amazon CloudFront as the public entry point. Static frontend assets are served from a private Amazon S3 bucket through CloudFront Origin Access Control (OAC), while requests matching `/analyses*` are routed through Amazon API Gateway to the AWS Lambda function that runs the FareWise API.
+
+<p align="center">
+  <img src="figures/farewise_architecture.svg" alt="FareWise AWS architecture" width="100%">
+</p>
+
+<p align="center"><em>Figure 1. FareWise AWS architecture.</em></p>
+
+## CI/CD workflow
+
+FareWise uses GitHub Actions for continuous integration and deployment. CI runs automated tests and Terraform checks for code changes. For changes pushed to the main branch, the CD workflow uses GitHub OIDC to assume an AWS IAM deployment role with temporary credentials before deploying updates to AWS (S3, Lambda, CloudFront).
+
+<p align="center">
+  <img src="figures/farewise_cicd.svg" alt="FareWise CI/CD workflow" width="100%">
+</p>
+
+<p align="center"><em>Figure 2. FareWise CI/CD workflow.</em></p>
