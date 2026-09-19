@@ -16,6 +16,16 @@ FareWise can also be run locally:
 python farewise.py journey_history.csv
 ```
 
+## AWS Architecture
+
+FareWise uses a serverless AWS architecture with Amazon CloudFront as the public entry point. Static frontend assets are served from a private Amazon S3 bucket through CloudFront Origin Access Control (OAC), while requests matching `/analyses*` are routed through Amazon API Gateway to the AWS Lambda function that runs the FareWise API.
+
+<p align="center">
+  <img src="farewise_architecture.svg" alt="FareWise AWS architecture" width="100%">
+</p>
+
+<p align="center"><em>Figure 1. FareWise AWS architecture.</em></p>
+
 ## How the comparison works
 
 FareWise compares PAYG (Pay as you go), Travelcards, and Bus & Tram Passes using TfL’s published fare information from the [TfL fares page](https://tfl.gov.uk/fares/new-fares).
