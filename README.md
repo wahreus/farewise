@@ -54,7 +54,7 @@ FareWise compares all tested strategies and reports the cheapest estimated optio
 FareWise uses a serverless AWS architecture with Amazon CloudFront as the public entry point. Static frontend assets are served from a private Amazon S3 bucket through CloudFront Origin Access Control (OAC), while requests matching `/analyses*` are routed through Amazon API Gateway to the AWS Lambda function that runs the FareWise API.
 
 <p align="center">
-  <img src="figures/farewise_architecture.svg" alt="FareWise AWS architecture" width="100%">
+  <img src="figures/farewise_architecture.svg" alt="FareWise AWS architecture" width="90%">
 </p>
 
 <p align="center"><em>Figure 1. FareWise AWS architecture.</em></p>
