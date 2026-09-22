@@ -18,36 +18,23 @@ python farewise.py journey_history.csv
 
 ## How the comparison works
 
-FareWise compares PAYG (Pay as you go), Travelcards, and Bus & Tram Passes using TfL’s published fare information from the [TfL fares page](https://tfl.gov.uk/fares/new-fares).
+FareWise compares PAYG (Pay As You Go), Travelcards, and Bus & Tram Passes using TfL’s published fare information from the [TfL fares page](https://tfl.gov.uk/fares/new-fares).
 
-FareWise compares strategies including:
+The optimizer uses recursion to explore valid fare choices across the journey history. For each day, FareWise considers the current *state*, including any active Travelcard or Bus & Tram Pass.
 
-```text
-PAYG only
-Zone 1    Travelcard + PAYG outside Zone 1
-Zones 1–2 Travelcard + PAYG outside Zones 1–2
-Zones 1–3 Travelcard + PAYG outside Zones 1–3
-Zones 1–4 Travelcard + PAYG outside Zones 1–4
-Zones 1–5 Travelcard + PAYG outside Zones 1–5
-Zones 1–6 Travelcard
-Bus & Tram Pass + PAYG for rail journeys
-Bus & Tram Pass + Travelcard + PAYG outside the Travelcard zones
-```
+The recursion moves forward to the end of the journey history, where the future cost is zero, and then resolves backwards. This means the final journey day is evaluated first. At each state, FareWise asks: “If I choose this option today, what is the cheapest way to pay for the remaining journeys?” By comparing these choices, the optimizer finds the fare strategy with the lowest total estimated cost.
 
-For each zone range, FareWise tests non-annual Travelcard durations:
+Figure 1 shows the state exploration conceptually. For clarity, only a subset of fare products and branches is shown.
 
-```text
-1 Day Anytime
-1 Day Off-Peak
-7 Day
-Monthly
-```
 
-Date-based payment options are tested across the journey history. For example, a 7 Day Travelcard or 7 Day Bus & Tram Pass could start on different days, so FareWise checks the possible validity periods and calculates the resulting total journey cost.
+<p align="center">
+<img src="figures/farewise_states.svg" alt="Conceptual view of the FareWise state exploration" width="100%">
+</p>
 
-When passes are combined, FareWise applies each pass only to the journeys it covers. Bus and tram journeys can be covered by a Bus & Tram Pass, journeys within the selected Travelcard zones can be covered by the Travelcard, and any remaining journeys are charged using PAYG.
+<p align="center"><em>Figure 1. Conceptual view of FareWise state exploration during optimization.</em></p>
 
-FareWise compares all tested strategies and reports the cheapest estimated option.
+FareWise uses memoization to avoid repeating work. Once the cheapest continuation from a state has been calculated, the result is cached. If the optimizer reaches the same state again, it reuses the cached result instead of recursively exploring the same remaining choices again.
+
 
 ## AWS architecture
 
@@ -57,7 +44,7 @@ FareWise uses a serverless AWS architecture with Amazon CloudFront as the public
   <img src="figures/farewise_architecture.svg" alt="FareWise AWS architecture" width="90%">
 </p>
 
-<p align="center"><em>Figure 1. FareWise AWS architecture.</em></p>
+<p align="center"><em>Figure 2. FareWise AWS architecture.</em></p>
 
 ## CI/CD workflow
 
@@ -67,4 +54,4 @@ FareWise uses GitHub Actions for continuous integration and deployment. CI runs 
   <img src="figures/farewise_cicd.svg" alt="FareWise CI/CD workflow" width="75%">
 </p>
 
-<p align="center"><em>Figure 2. FareWise CI/CD workflow.</em></p>
+<p align="center"><em>Figure 3. FareWise CI/CD workflow.</em></p>
