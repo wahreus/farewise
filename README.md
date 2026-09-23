@@ -20,18 +20,25 @@ python farewise.py journey_history.csv
 
 FareWise compares PAYG (Pay As You Go), Travelcards, and Bus & Tram Passes using TfL’s published fare information from the [TfL fares page](https://tfl.gov.uk/fares/new-fares).
 
-The optimizer uses recursion to explore valid fare choices across the journey history. For each day, FareWise considers the current *state*, including any active Travelcard or Bus & Tram Pass.
+The optimizer uses recursion to explore valid fare choices across the journey history. For each day, FareWise considers the current **state**, including any active Travelcard or Bus & Tram Pass.
 
 The recursion moves forward to the end of the journey history, where the future cost is zero, and then resolves backwards. This means the final journey day is evaluated first. At each state, FareWise asks: “If I choose this option today, what is the cheapest way to pay for the remaining journeys?” By comparing these choices, the optimizer finds the fare strategy with the lowest total estimated cost.
 
 Figure 1 shows the state exploration conceptually. For clarity, only a subset of fare products and branches is shown.
 
-
 <p align="center">
-<img src="figures/farewise_states.svg" alt="Conceptual view of the FareWise state exploration" width="100%">
+  <img src="figures/farewise_states.svg" alt="Conceptual view of the FareWise state exploration" width="100%">
 </p>
 
 <p align="center"><em>Figure 1. Conceptual view of FareWise state exploration during optimization.</em></p>
+
+Figure 2 illustrates how the recursive calculation resolves. Recursive calls move forward through the journey history until the base case is reached. The base case returns zero because there are no remaining journeys. The returned values then propagate backwards, with each state returning the minimum of the current choice cost plus the value returned by the resulting child state.
+
+<p align="center">
+  <img src="figures/farewise_recursion.svg" alt="Conceptual view of the FareWise recursive calculation" width="100%">
+</p>
+
+<p align="center"><em>Figure 2. Conceptual view of recursive calls and returned costs during FareWise optimization.</em></p>
 
 FareWise uses memoization to avoid repeating work. Once the cheapest continuation from a state has been calculated, the result is cached. If the optimizer reaches the same state again, it reuses the cached result instead of recursively exploring the same remaining choices again.
 
@@ -44,7 +51,7 @@ FareWise uses a serverless AWS architecture with Amazon CloudFront as the public
   <img src="figures/farewise_architecture.svg" alt="FareWise AWS architecture" width="90%">
 </p>
 
-<p align="center"><em>Figure 2. FareWise AWS architecture.</em></p>
+<p align="center"><em>Figure 3. FareWise AWS architecture.</em></p>
 
 ## CI/CD workflow
 
@@ -54,4 +61,4 @@ FareWise uses GitHub Actions for continuous integration and deployment. CI runs 
   <img src="figures/farewise_cicd.svg" alt="FareWise CI/CD workflow" width="75%">
 </p>
 
-<p align="center"><em>Figure 3. FareWise CI/CD workflow.</em></p>
+<p align="center"><em>Figure 4. FareWise CI/CD workflow.</em></p>
